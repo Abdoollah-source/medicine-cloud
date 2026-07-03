@@ -57,7 +57,13 @@ export default {
       });
     }
 
-    if (allowedOriginParsed.origin !== targetUrl.origin) {
+    var targetHost = targetUrl.hostname;
+    var allowedHost = allowedOriginParsed.hostname;
+
+    var isAllowed = (targetHost === allowedHost) || 
+                    (targetHost.endsWith('.medicine-cloud.pages.dev') && targetUrl.protocol === 'https:');
+
+    if (!isAllowed) {
       return new Response('Forbidden', {
         status: 403,
         headers: corsHeaders

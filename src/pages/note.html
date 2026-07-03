@@ -333,6 +333,12 @@
       return;
     }
     noteData = data;
+
+    // Load template from URL query param or note data
+    var urlParams = new URLSearchParams(location.search);
+    var urlTemplate = urlParams.get('template') || data.template_id || 'classic';
+    loadTemplate(urlTemplate);
+
     setupLangToggle();
     renderActiveLanguage();
     enableExportButtons();
