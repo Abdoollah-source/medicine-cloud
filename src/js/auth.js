@@ -28,23 +28,39 @@ function showAuthError(message) {
 }
 
 async function checkAllowlist(session) {
+  console.log('checkAllowlist: Checking session for user:', session?.user?.email);
   const client = await getClient();
-  if (!client || !session?.user?.email) return false;
+  if (!client) {
+    console.warn('checkAllowlist: Supabase client is not initialized');
+    return false;
+  }
+  if (!session?.user?.email) {
+    console.warn('checkAllowlist: No email found in session');
+    return false;
+  }
 
   const email = session.user.email.toLowerCase();
+  console.log('checkAllowlist: Querying database for email:', email);
   try {
     const { data, error } = await client
       .from('allowed_users')
       .select('email')
       .eq('email', email);
-    if (error) throw error;
+    
+    if (error) {
+      console.error('checkAllowlist: Database query error:', error);
+      throw error;
+    }
+    console.log('checkAllowlist: Database returned rows:', data);
     if (!data || data.length === 0) {
+      console.warn('checkAllowlist: Email not found in allowed list. Logging out.');
       await client.auth.signOut();
       return false;
     }
+    console.log('checkAllowlist: Allowed successfully!');
     return true;
   } catch (err) {
-    console.error('Allowlist check failed:', err);
+    console.error('checkAllowlist: Catch block caught error:', err);
     try { await client.auth.signOut(); } catch (_) {}
     return false;
   }
@@ -79,25 +95,34 @@ async function signOut() {
 }
 
 async function initAuth() {
+  console.log('initAuth: Initializing auth state...');
   const client = await getClient();
-  if (!client) return;
+  if (!client) {
+    console.warn('initAuth: No client available');
+    return;
+  }
 
   const { data: { session } } = await client.auth.getSession();
+  console.log('initAuth: Current session on load:', session);
   if (session) {
     const allowed = await checkAllowlist(session);
+    console.log('initAuth: Allowlist status on load:', allowed);
     if (!allowed) {
       showAuthError('Access not granted. Please sign in with an invited email.');
       return;
     }
     if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
+      console.log('initAuth: User allowed, redirecting to dashboard.html');
       window.location.replace('dashboard.html');
       return;
     }
   }
 
   client.auth.onAuthStateChange(async (event, session) => {
+    console.log('initAuth: onAuthStateChange fired:', event, session);
     if (event === 'SIGNED_IN' && session) {
       const allowed = await checkAllowlist(session);
+      console.log('initAuth: onAuthStateChange allowlist status:', allowed);
       if (allowed) {
         window.location.replace('dashboard.html');
       } else {
@@ -114,20 +139,26 @@ async function requireAuth() {
     return null;
   }
 
+  console.log('requireAuth: Checking auth status...');
   const client = await getClient();
   if (!client) {
+    console.warn('requireAuth: No client, redirecting to login.html');
     window.location.replace('login.html');
     return null;
   }
 
   const { data: { session } } = await client.auth.getSession();
+  console.log('requireAuth: Session status:', session);
   if (!session) {
+    console.warn('requireAuth: No session, redirecting to login.html');
     window.location.replace('login.html');
     return null;
   }
 
   const allowed = await checkAllowlist(session);
+  console.log('requireAuth: Allowlist status:', allowed);
   if (!allowed) {
+    console.warn('requireAuth: User not allowed, redirecting to login.html');
     window.location.replace('login.html');
     return null;
   }
