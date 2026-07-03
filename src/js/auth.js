@@ -111,7 +111,7 @@ async function initAuth() {
       showAuthError('Access not granted. Please sign in with an invited email.');
       return;
     }
-    if (window.location.pathname.endsWith('login.html') || window.location.pathname === '/' || window.location.pathname === '') {
+    if (window.location.pathname.includes('login') || window.location.pathname === '/' || window.location.pathname === '') {
       console.log('initAuth: User allowed, redirecting to dashboard.html');
       window.location.replace('dashboard.html');
       return;
