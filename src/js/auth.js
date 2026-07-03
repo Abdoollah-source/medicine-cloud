@@ -75,6 +75,7 @@ async function signInWithGoogle() {
   const { error } = await client.auth.signInWithOAuth({
     provider: 'google',
     options: {
+      redirectTo: window.location.origin + '/pages/login.html',
       queryParams: {
         prompt: 'select_account'
       }
