@@ -56,7 +56,14 @@ async function signInWithGoogle() {
     showAuthError('Authentication service is unavailable. Please try again later.');
     return;
   }
-  const { error } = await client.auth.signInWithOAuth({ provider: 'google' });
+  const { error } = await client.auth.signInWithOAuth({
+    provider: 'google',
+    options: {
+      queryParams: {
+        prompt: 'select_account'
+      }
+    }
+  });
   if (error) {
     console.error('Google sign-in error:', error);
     showAuthError('Sign-in failed. Please try again.');
