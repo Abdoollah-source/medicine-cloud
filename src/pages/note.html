@@ -181,7 +181,7 @@
 
 <script type="module">
   import { renderNote } from '../js/renderer.js';
-  import { loadTemplate, getActiveTemplate } from '../js/templates.js';
+  import { loadTemplate, getActiveTemplate, loadRegistry } from '../js/templates.js';
   import { signOut as authSignOut } from '../js/auth.js';
   import { exportHTML } from '../js/export.js';
   import { enableSharing, revokeSharing, getNoteByShareToken } from '../js/notes.js';
@@ -209,11 +209,21 @@
     applyTheme(next);
   });
 
-  const activeTemplate = getActiveTemplate();
   const switcher = document.getElementById('template-switcher');
   if (switcher) {
-    switcher.value = activeTemplate;
-    loadTemplate(activeTemplate);
+    loadRegistry().then(templates => {
+      switcher.innerHTML = '';
+      templates.forEach(tpl => {
+        const opt = document.createElement('option');
+        opt.value = tpl.id;
+        opt.textContent = tpl.name;
+        switcher.appendChild(opt);
+      });
+      const activeTemplate = getActiveTemplate();
+      switcher.value = activeTemplate;
+      loadTemplate(activeTemplate);
+    });
+
     switcher.addEventListener('change', function() {
       loadTemplate(this.value);
     });

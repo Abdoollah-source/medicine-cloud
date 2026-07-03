@@ -1,4 +1,4 @@
-import { loadTemplate, getActiveTemplate, TEMPLATES } from './templates.js';
+import { loadTemplate, getActiveTemplate, loadRegistry, TEMPLATES } from './templates.js';
 import { renderNote } from './renderer.js';
 import { createNote, getNote, updateNote } from './notes.js';
 
@@ -229,16 +229,18 @@ function initTemplateSelector() {
   const select = document.getElementById('templateSelect');
   if (!select) return;
 
-  select.innerHTML = '';
-  Object.keys(TEMPLATES).forEach(key => {
-    const opt = document.createElement('option');
-    opt.value = key;
-    opt.textContent = key === 'classic' ? 'Classic' : 'Academic Dark';
-    select.appendChild(opt);
-  });
+  loadRegistry().then(templates => {
+    select.innerHTML = '';
+    templates.forEach(tpl => {
+      const opt = document.createElement('option');
+      opt.value = tpl.id;
+      opt.textContent = tpl.name;
+      select.appendChild(opt);
+    });
 
-  select.value = getActiveTemplate();
-  loadTemplate(select.value);
+    select.value = getActiveTemplate();
+    loadTemplate(select.value);
+  });
 
   select.addEventListener('change', () => {
     loadTemplate(select.value);

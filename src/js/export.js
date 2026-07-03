@@ -303,14 +303,41 @@ function triggerDownload(htmlString, filename) {
   setTimeout(function() { URL.revokeObjectURL(url); }, 10000);
 }
 
+const CSS_TEMPLATE_IDS = new Set(['classic', 'academic-dark']);
+
+async function exportWithHtmlTemplate(exportNote, templateId) {
+  const templateUrl = new URL('../templates/' + templateId + '.html', location.href).href;
+  const res = await fetch(templateUrl);
+  if (!res.ok) throw new Error('Could not fetch template file: ' + templateId + '.html (' + res.status + ')');
+  let html = await res.text();
+
+  // Inject note JSON into the <script id="note-data"> tag that already exists in the template
+  const noteJson = JSON.stringify(exportNote, null, 2);
+  html = html.replace(
+    /<script\s[^>]*id=["']note-data["'][^>]*>[\s\S]*?<\/script>/i,
+    '<script id="note-data" type="application/json">\n' + noteJson + '\n</script>'
+  );
+
+  return html;
+}
+
 async function exportHTML(note, templateId) {
   var exportNote = buildExportableNote(note);
   var slug = makeSlug(exportNote.title);
   var filename = makeFilename(slug);
 
-  var css = await fetchCss(templateId);
-  var html = buildDocument(exportNote, css.baseCss, css.templateCss, templateId);
+  var html;
+  if (CSS_TEMPLATE_IDS.has(templateId)) {
+    // CSS-based template: build document from scratch with inline styles
+    var css = await fetchCss(templateId);
+    html = buildDocument(exportNote, css.baseCss, css.templateCss, templateId);
+  } else {
+    // HTML-based template: fetch standalone template file and inject note data
+    html = await exportWithHtmlTemplate(exportNote, templateId);
+  }
+
   triggerDownload(html, filename);
 }
 
 export { exportHTML };
+

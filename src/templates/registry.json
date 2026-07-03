@@ -1,0 +1,28 @@
+[
+  {
+    "id": "classic",
+    "name": "Classic",
+    "type": "css",
+    "description": "Clean neo-brutalist style with warm cream tones"
+  },
+  {
+    "id": "academic-dark",
+    "name": "Academic Dark",
+    "type": "css",
+    "description": "Dark slate academic style for night reading"
+  },
+  {
+    "id": "template1",
+    "name": "Elegant Journal",
+    "type": "html",
+    "file": "template1.html",
+    "description": "Fraunces serif with warm paper tones and gold accents"
+  },
+  {
+    "id": "template2",
+    "name": "Hard Shadow",
+    "type": "html",
+    "file": "template2.html",
+    "description": "Space Grotesk with bold cube shadows and coral accents"
+  }
+]
