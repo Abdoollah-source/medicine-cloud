@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Medicine Cloud — Project Overview</title>
+<style>
+  body{
+    font-family: Georgia, 'Times New Roman', serif;
+    max-width: 780px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+    line-height: 1.65;
+    color: #2b2b2b;
+    background: #fbfaf7;
+  }
+  h1{
+    font-size: 1.9rem;
+    margin-bottom: 4px;
+  }
+  .subtitle{
+    color: #6a6a6a;
+    font-style: italic;
+    margin-top: 0;
+    margin-bottom: 40px;
+  }
+  h2{
+    font-size: 1.3rem;
+    border-bottom: 2px solid #ddd7c9;
+    padding-bottom: 6px;
+    margin-top: 48px;
+  }
+  h3{
+    font-size: 1.05rem;
+    margin-top: 28px;
+    color: #4a4020;
+  }
+  code, .filename{
+    font-family: 'Courier New', monospace;
+    background: #efece2;
+    padding: 1px 6px;
+    border-radius: 4px;
+    font-size: 0.92em;
+  }
+  .step-box{
+    background: #f2f0e6;
+    border-left: 4px solid #a8791c;
+    padding: 14px 18px;
+    margin: 16px 0;
+    border-radius: 0 6px 6px 0;
+  }
+  ul, ol{
+    padding-left: 24px;
+  }
+  li{
+    margin-bottom: 8px;
+  }
+  table{
+    width: 100%;
+    border-collapse: collapse;
+    margin: 16px 0;
+  }
+  th, td{
+    text-align: left;
+    padding: 8px 10px;
+    border: 1px solid #ddd7c9;
+    vertical-align: top;
+    font-size: 0.95em;
+  }
+  th{
+    background: #efece2;
+  }
+  .note{
+    background: #fff8e8;
+    border: 1px solid #e8d9a8;
+    padding: 12px 16px;
+    border-radius: 6px;
+    font-size: 0.95em;
+    margin: 16px 0;
+  }
+  .status{
+    display: inline-block;
+    font-size: 0.78rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 2px 9px;
+    border-radius: 999px;
+    background: #e4ecd8;
+    color: #3c5a1f;
+    font-family: Arial, sans-serif;
+  }
+  hr{
+    border: none;
+    border-top: 1px solid #ddd7c9;
+    margin: 48px 0;
+  }
+  footer{
+    color: #888;
+    font-size: 0.85em;
+    text-align: center;
+    margin-top: 60px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Medicine Cloud — Project Overview</h1>
+<p class="subtitle">How the notes are made today, and the plan to turn it into a real web app.</p>
+
+<h2>1. What this project actually is</h2>
+<p>
+"Medicine Cloud" is a personal system for turning messy lecture notes — PDFs, photos of handwriting,
+screenshots, voice messages, and scattered links — into clean, good-looking study notes that can be
+read on a phone or computer. It also links important medical terms (diseases, drugs, organisms, etc.)
+straight to their Wikipedia articles, and embeds media like YouTube videos or Telegram posts right
+inside the note.
+</p>
+<p>
+Right now this is done <strong>manually, one note at a time</strong>, using two files. The goal of this
+project is to turn that manual process into an automated, always-available website that a small group
+of people (the project owner and a few friends/classmates) can log into, use, and save their notes to
+permanently.
+</p>
+
+<h2>2. How it works today (the manual process)</h2>
+
+<h3>File 1 — <span class="filename">medicine-cloud-json-extraction-prompt.md</span></h3>
+<p>
+This is a long, very strict instruction sheet that gets pasted into an AI chat, along with the raw
+lecture material (PDFs, photos, screenshots, links). It tells the AI to act like a careful data-entry
+machine, not a creative writer. The rules include:
+</p>
+<ul>
+  <li>Never invent facts, numbers, or explanations that aren't in the source material.</li>
+  <li>Only fix spelling, grammar, and OCR garbage — don't rewrite or shorten the original meaning.</li>
+  <li>Keep each language exactly where it appears (the notes mix English and Arabic) — never translate
+    unless explicitly told to.</li>
+  <li>Only use a fixed, limited set of HTML tags (paragraphs, headings, lists, tables, bold/italic, and
+    special colored links for medical terms).</li>
+  <li>Turn any media links (YouTube, Telegram, images, audio, video) into specific placeholder tags like
+    <code>[[YT:videoID]]</code> or <code>[[IMAGE:url]]</code> that the website later understands.</li>
+  <li>Output <em>only</em> one clean JSON object, wrapped in a JSON array — nothing else.</li>
+</ul>
+<p>
+The result of this step is a single block of JSON text containing the note's title, language, subject,
+date, and the fully formatted content.
+</p>
+
+<h3>File 2 — <span class="filename">medicine-cloud-note_claude_.html</span></h3>
+<p>
+This is a ready-made, self-contained webpage with all its design (fonts, colors, light/dark mode,
+Arabic/English text direction) already built in. It has one empty spot near the bottom — a
+<code>&lt;script id="note-data" type="application/json"&gt;</code> tag — where the JSON produced in
+Step 1 gets pasted by hand.
+</p>
+<p>
+Once the JSON is pasted in and the file is saved, opening it in a browser automatically:
+</p>
+<ul>
+  <li>Displays the title, subject, unit, and date nicely.</li>
+  <li>Renders the content with the right fonts and text direction for the language.</li>
+  <li>Converts every <code>[[YT:...]]</code>, <code>[[IMAGE:...]]</code>, <code>[[TG_POST:...]]</code>, etc.
+    placeholder into a real embedded video, image, or link-out card.</li>
+  <li>Turns colored medical terms into clickable Wikipedia links.</li>
+  <li>Lets the reader switch between light/dark theme and (if a translated version was generated) between
+    languages.</li>
+</ul>
+
+<div class="step-box">
+  <strong>In short, the manual workflow today is:</strong>
+  <ol>
+    <li>Gather the lecture material (PDFs, photos, links).</li>
+    <li>Paste the material + the prompt file into an AI chat.</li>
+    <li>Copy the JSON the AI produces.</li>
+    <li>Paste that JSON into the HTML file, in the exact right spot.</li>
+    <li>Save the file and open it — the note is now readable and shareable.</li>
+  </ol>
+</div>
+
+<h2>3. The problem with the manual process</h2>
+<ul>
+  <li>Every note is its own separate HTML file — nothing is centralized or searchable.</li>
+  <li>Pasting JSON by hand into a script tag is fragile — one broken quote or comma breaks the whole page.</li>
+  <li>There's no way to save a library of notes, edit them later, or apply a different look to an old note
+    without redoing the paste-and-save process.</li>
+  <li>Sharing means sending an HTML file around — no proper website, no PDF export, no accounts.</li>
+</ul>
+
+<h2>4. The plan — turning this into a real web app</h2>
+<p>
+The goal is a website where the same JSON gets pasted into a text box (instead of a file), a template
+and color palette get picked, and the note is instantly previewed, saved, and exportable — with zero
+cost and no risk of the service disappearing or throttling due to normal, small-scale use.
+</p>
+
+<h3>Who can use it</h3>
+<p>
+Not a public tool — just the project owner and a small group of friends/classmates. Each person gets
+their own account and their own private notes by default, with the option to share an individual note
+with a link when they want to.
+</p>
+
+<h3>How people log in</h3>
+<p>
+<strong>Google Sign-In</strong> was chosen as the main method — one tap, no password to create, remember,
+or leak. (A password-free email "magic link" option can exist as a backup for anyone who prefers it.)
+This also solves the earlier concern about a shared password: if there's no shared secret, there's
+nothing for someone to leak or misuse to damage everyone else's notes.
+</p>
+
+<h3>The building blocks</h3>
+<table>
+  <tr><th>Piece</th><th>What it does</th><th>Tool used</th><th>Cost</th></tr>
+  <tr>
+    <td>The website itself</td>
+    <td>Paste JSON, pick a template, preview, save, export</td>
+    <td>Cloudflare Pages (static hosting)</td>
+    <td>Free forever</td>
+  </tr>
+  <tr>
+    <td>Accounts &amp; saved notes</td>
+    <td>Google sign-in, private note storage, per-note sharing</td>
+    <td>Supabase (database + auth)</td>
+    <td>Free tier, small scale</td>
+  </tr>
+  <tr>
+    <td>Templates</td>
+    <td>Swappable colors/fonts/layout, same JSON works with any template</td>
+    <td>Built on top of the existing CSS system already in the HTML file</td>
+    <td>Free</td>
+  </tr>
+  <tr>
+    <td>HTML export</td>
+    <td>Download a standalone HTML file of any note</td>
+    <td>Generated directly in the browser</td>
+    <td>Free</td>
+  </tr>
+  <tr>
+    <td>PDF export</td>
+    <td>Pixel-accurate PDF that matches the HTML exactly, no overlapping or cut-off text</td>
+    <td>A small serverless function that uses real Chrome to print the page</td>
+    <td>Free tier</td>
+  </tr>
+  <tr>
+    <td>Safety net</td>
+    <td>Deleted notes are recoverable; nothing can be permanently destroyed by accident or a compromised login</td>
+    <td>Soft-delete + optional version history backup</td>
+    <td>Free</td>
+  </tr>
+</table>
+
+<h3>The two free-tier "gotchas" and how they're handled</h3>
+<div class="note">
+  <strong>Supabase pauses a project after about a week with no activity.</strong>
+  Fixed with a free automated check-in (a scheduled GitHub Actions job) every few days, so the
+  database never goes to sleep. <br><br>
+  <strong>Supabase's free email sending has limits.</strong>
+  Solved by using Google Sign-In instead of emailed login links, which has no such limit.
+</div>
+
+<h2>5. Why this approach was chosen over the alternatives</h2>
+<ul>
+  <li><strong>Client-side-only PDF generation</strong> (screenshotting the page in the browser) was
+    considered, but rejected — it's known to cause exactly the problems this project wants to avoid:
+    text getting cut off at page breaks and layouts shifting.</li>
+  <li><strong>Using a Telegram bot as the main database</strong> was considered (an idea worth crediting to
+    the project owner). It turned out to be a poor fit as the <em>primary</em> storage, because Telegram's
+    bot system has no clean way to list or search everything that's been saved — you'd still need a
+    separate index somewhere, which defeats the purpose. It remains a good idea as a free <em>backup
+    mirror</em> for saved notes, just not the main database.</li>
+  <li><strong>A shared password for the whole group</strong> was considered and rejected for the reason the
+    project owner raised: a single leaked password could let someone damage everyone's notes. Individual
+    accounts with proper permissions solve this at no extra cost.</li>
+</ul>
+
+<h2>6. Where things stand</h2>
+<p><span class="status">Planning complete</span></p>
+<p>
+The idea, the manual workflow, the requirements, and the technical architecture have all been discussed
+and agreed on. The next step is building the actual project — starting with the core template-rendering
+system (since everything else depends on it), then adding accounts and saved-note storage, then the PDF
+export function.
+</p>
+
+<hr>
+<footer>Medicine Cloud — internal project notes, written to explain the idea from start to finish.</footer>
+
+</body>
+</html>

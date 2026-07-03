@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Medicine Cloud · Note</title>
+<meta name="description" content="Medicine Cloud — lecture journals and medical notes." />
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Cairo:wght@400;600;700;800&family=Noto+Naskh+Arabic:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<style>
+  /* ============================================================
+     TOKENS — Hard Shadow / Cube Edition
+     ============================================================ */
+  :root{
+    --font-display:'Space Grotesk', sans-serif;
+    --font-display-ar:'Cairo', sans-serif;
+    --font-mono:'IBM Plex Mono', ui-monospace, Menlo, monospace;
+    --font-body:'Space Grotesk', sans-serif;
+    --font-note:'Literata', Georgia, serif;
+    --font-note-ar:'Noto Naskh Arabic', 'Cairo', serif;
+    --ease: cubic-bezier(.22,1,.36,1);
+  }
+
+  html[data-theme="light"]{
+    --desk:       #e6d7b8;
+    --cream:      #f6ecd9;
+    --paper-2:    #efe1c4;
+    --ink:        #14120f;
+    --ink-soft:   #5b5546;
+    --ink-faint:  #8f8770;
+    --coral:      #ff6f52;
+    --coral-2:    #e8532f;
+    --seal-bg:    #ffffff;
+    --grain-opacity: .05;
+
+    --color-microbe:   #1f7a4d;
+    --color-protein:   #1758b0;
+    --color-pathology: #c62233;
+    --color-anatomy:   #c9660c;
+    --color-pharma:    #7a1fae;
+    --bg-term:         rgba(20,18,15,.05);
+  }
+
+  html[data-theme="dark"]{
+    --desk:       #08080a;
+    --cream:      #17161a;
+    --paper-2:    #1e1c20;
+    --ink:        #f2e9d4;
+    --ink-soft:   #b7ad95;
+    --ink-faint:  #766f5c;
+    --coral:      #ff8464;
+    --coral-2:    #ffa084;
+    --seal-bg:    #232128;
+    --grain-opacity: .07;
+
+    --color-microbe:   #86e0ab;
+    --color-protein:   #9dc4fb;
+    --color-pathology: #ff98a7;
+    --color-anatomy:   #ffbb7a;
+    --color-pharma:    #dcaefb;
+    --bg-term:         rgba(242,233,212,.06);
+  }
+
+  *{ margin:0; padding:0; box-sizing:border-box; }
+  html,body{ height:100%; }
+  body{
+    min-height:100vh;
+    background: var(--desk);
+    color: var(--ink);
+    font-family: var(--font-body);
+    transition: background-color .5s var(--ease), color .5s var(--ease);
+    -webkit-font-smoothing: antialiased;
+    overflow-x:hidden;
+  }
+
+  .note-content[dir="rtl"]{ font-family: var(--font-note-ar); }
+  .note-title[dir="rtl"]{ font-family: var(--font-display-ar); }
+
+  .grain{
+    position:fixed; inset:0; z-index:0; pointer-events:none;
+    opacity: var(--grain-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+  html[data-theme="dark"] .grain{ mix-blend-mode: screen; }
+
+  ::selection{ background: var(--coral); color: var(--cream); }
+  ::-webkit-scrollbar{ width:10px; }
+  ::-webkit-scrollbar-thumb{ background: var(--ink); border: 2px solid var(--desk); }
+
+  /* ============================================================
+     HARD SHADOW UTILITIES
+     ============================================================ */
+  .hs-sm{
+    border: 2.5px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink);
+    transition: transform .15s var(--ease), box-shadow .15s var(--ease);
+  }
+  .hs-sm.hs-hover:hover{
+    transform:translate(-2px,-2px);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink), 5px 5px 0 var(--ink), 6px 6px 0 var(--coral);
+  }
+  .hs-md{
+    border: 2.5px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink), 5px 5px 0 var(--ink);
+    transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .hs-md.hs-hover:hover{
+    transform:translate(-3px,-3px);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink), 5px 5px 0 var(--ink), 6px 6px 0 var(--ink), 7px 7px 0 var(--ink), 8px 8px 0 var(--coral);
+  }
+  .hs-lg{
+    border: 3px solid var(--ink);
+    box-shadow: 1px 1px 0 var(--ink), 2px 2px 0 var(--ink), 3px 3px 0 var(--ink), 4px 4px 0 var(--ink), 5px 5px 0 var(--ink), 6px 6px 0 var(--ink), 7px 7px 0 var(--ink);
+  }
+
+  /* ============================================================
+     PLATE (the whole note is one giant hard-shadow card)
+     ============================================================ */
+  .stage{
+    position:relative; z-index:1;
+    min-height:100vh;
+    display:flex; align-items:flex-start; justify-content:center;
+    padding: clamp(24px, 5vw, 64px);
+  }
+
+  .plate{
+    position:relative;
+    width:100%;
+    max-width: 900px;
+    background: var(--cream);
+    padding: clamp(24px, 4.5vw, 52px);
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .05s forwards;
+  }
+
+  /* ---------- top row ---------- */
+  .top-row{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:14px;
+    padding-bottom: 20px;
+    border-bottom: 2.5px solid var(--ink);
+  }
+  .brand-eyebrow{
+    display:flex; align-items:center; gap:8px;
+    font-family: var(--font-mono);
+    font-weight:700;
+    font-size: .72rem;
+    letter-spacing: .18em;
+    text-transform: uppercase;
+    color: var(--ink);
+  }
+  .brand-eyebrow b{ color: var(--coral); }
+  .brand-cube{ width:16px; height:16px; stroke:var(--ink); stroke-width:2.4; fill:none; stroke-linejoin:round; stroke-linecap:round; flex-shrink:0; }
+
+  .top-controls{ display:flex; align-items:center; gap:10px; }
+
+  .lang-toggle, .theme-toggle{
+    display:flex; align-items:center; gap:7px;
+    background: var(--paper-2);
+    padding: 7px 13px;
+    cursor:pointer;
+    font-family: var(--font-mono);
+    font-weight:600; font-size:.66rem;
+    letter-spacing:.08em; text-transform:uppercase;
+    color: var(--ink);
+  }
+  .lang-toggle:active, .theme-toggle:active{ transform: translate(0,0) !important; box-shadow: 1px 1px 0 var(--ink) !important; }
+  .toggle-icon{ width:13px; height:13px; position:relative; display:grid; place-items:center; }
+  .toggle-icon svg{ width:13px; height:13px; position:absolute; inset:0; transition: opacity .35s ease, transform .4s var(--ease); stroke:var(--ink); }
+  .icon-sun{ opacity:1; transform:rotate(0) scale(1); }
+  .icon-moon{ opacity:0; transform:rotate(-70deg) scale(.5); }
+  html[data-theme="dark"] .icon-sun{ opacity:0; transform:rotate(70deg) scale(.5); }
+  html[data-theme="dark"] .icon-moon{ opacity:1; transform:rotate(0) scale(1); }
+
+  /* ---------- identity ---------- */
+  .main-block{
+    display:flex; flex-direction:column;
+    gap: clamp(22px, 3vw, 28px);
+    padding-top: clamp(22px, 4vw, 34px);
+  }
+
+  .identity{
+    display:flex; align-items:center; gap: clamp(18px,3vw,28px); flex-wrap:wrap;
+  }
+
+  .seal-btn{
+    flex-shrink:0;
+    width: clamp(64px, 8.5vw, 84px);
+    height: clamp(64px, 8.5vw, 84px);
+    background: var(--seal-bg);
+    display:grid; place-items:center;
+    cursor:pointer; padding:0; position:relative; overflow:hidden;
+    -webkit-tap-highlight-color:transparent;
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .2s forwards;
+  }
+  .seal-btn img{
+    width:100%; height:100%; object-fit:cover; display:block;
+    transition: transform .4s var(--ease);
+  }
+  .seal-btn:hover img{ transform: scale(1.08) rotate(-2deg); }
+
+  .name-block{ min-width:0; }
+  .name-link{
+    display:inline-block; text-decoration:none; -webkit-tap-highlight-color:transparent;
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .28s forwards;
+  }
+  .name-text{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: clamp(2.1rem, 7vw, 3.9rem);
+    line-height: .98;
+    letter-spacing: -.01em;
+    color: var(--ink);
+    margin:0;
+  }
+  .name-text .hl{
+    display:inline-block;
+    background: var(--coral);
+    color: var(--cream);
+    padding: 0 .18em;
+    transform: rotate(-1deg);
+    margin-top:.12em;
+  }
+  .name-link:hover .name-text .hl{ transform: rotate(0deg); }
+
+  .role-line{
+    font-family: var(--font-mono);
+    font-weight:600;
+    font-size: .78rem;
+    letter-spacing:.02em;
+    color: var(--ink-soft);
+    margin: 12px 0 0;
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .36s forwards;
+  }
+
+  .pulse-rule{
+    position:relative; width:100%; height:26px; margin-top:2px;
+  }
+  .pulse-rule svg{ width:100%; height:100%; display:block; overflow:visible; }
+  .pulse-line{
+    fill:none; stroke: var(--ink); stroke-width:2.4;
+    stroke-linecap:square; stroke-linejoin:miter;
+    stroke-dasharray: 1400; stroke-dashoffset: 1400;
+    animation: drawRule 1.6s var(--ease) .55s forwards;
+  }
+  .pulse-line-shadow{
+    fill:none; stroke: var(--coral); stroke-width:2.4;
+    stroke-linecap:square; stroke-linejoin:miter;
+    stroke-dasharray: 1400; stroke-dashoffset: 1400;
+    animation: drawRule 1.6s var(--ease) .55s forwards;
+    transform: translate(3px,3px);
+  }
+  @keyframes drawRule{ to{ stroke-dashoffset:0; } }
+
+  /* ============================================================
+     NOTE CONTAINER
+     ============================================================ */
+  .note-container{
+    width:100%;
+    background: var(--paper-2);
+    padding: clamp(22px, 4vw, 40px);
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .5s forwards;
+  }
+
+  .note-title{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: clamp(1.7rem, 4.2vw, 2.6rem);
+    line-height:1.15;
+    color: var(--ink);
+    margin: 0 0 16px 0;
+    letter-spacing:-.01em;
+  }
+
+  .note-meta-bar{ display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin: 0 0 24px 0; }
+  .note-pill{
+    font-family: var(--font-mono);
+    font-weight:700; font-size:.62rem;
+    letter-spacing:.1em; text-transform:uppercase;
+    color: var(--ink);
+    background: var(--cream);
+    border: 2px solid var(--ink);
+    padding:4px 10px;
+    box-shadow: 2px 2px 0 var(--ink);
+  }
+
+  .note-content{
+    font-family: var(--font-note);
+    font-size: clamp(1.02rem, 1.6vw, 1.15rem);
+    line-height: 1.85;
+    color: var(--ink);
+  }
+  .note-content p{ margin: 0 0 22px 0; }
+
+  .note-content h2{
+    font-family: var(--font-display);
+    font-weight:700;
+    font-size: clamp(1.35rem, 2.6vw, 1.8rem);
+    margin: 44px 0 16px 0;
+    color: var(--ink);
+    background: var(--cream);
+    border: 2.5px solid var(--ink);
+    border-left: 8px solid var(--coral);
+    padding: 10px 16px;
+    box-shadow: 3px 3px 0 var(--ink);
+  }
+  .note-content[dir="rtl"] h2{ border-left: 2.5px solid var(--ink); border-right: 8px solid var(--coral); }
+
+  .note-content h3{
+    font-family: var(--font-display);
+    font-weight:600;
+    font-size: clamp(1.15rem, 2.1vw, 1.4rem);
+    margin: 34px 0 14px 0;
+    color: var(--coral-2);
+    padding-bottom: 6px;
+    border-bottom: 2px dashed var(--ink-faint);
+  }
+
+  .note-content ul, .note-content ol{ margin: 0 0 24px 0; padding-left: 22px; }
+  .note-content[dir="rtl"] ul, .note-content[dir="rtl"] ol{ padding-left:0; padding-right:22px; }
+  .note-content li{ margin-bottom: 10px; }
+
+  .note-content strong{ font-weight:700; color: var(--ink); }
+  .note-content em{ font-style:italic; }
+
+  .note-content table{
+    width:100%; border-collapse:collapse; margin: 18px 0 30px 0;
+    font-size:.88em;
+    border: 2.5px solid var(--ink);
+  }
+  .note-content th, .note-content td{
+    border:1.5px solid var(--ink); padding:10px 12px; text-align:left;
+  }
+  .note-content[dir="rtl"] th, .note-content[dir="rtl"] td{ text-align:right; }
+  .note-content th{
+    background: var(--ink); color: var(--cream);
+    font-family: var(--font-mono); font-weight:700;
+    font-size:.68rem; letter-spacing:.05em; text-transform:uppercase;
+  }
+  .note-content tr:nth-child(even) td{ background: var(--cream); }
+
+  /* ---------- Term Links ---------- */
+  .note-content a{
+    text-decoration:none;
+    font-weight:700;
+    padding: 1px 6px;
+    background-color: var(--bg-term);
+    border-bottom: 2.5px solid transparent;
+    transition: background-color .2s var(--ease), border-color .2s var(--ease);
+  }
+  .note-content a:hover{ background-color: var(--coral); color: var(--cream) !important; border-bottom-color: var(--ink); }
+
+  .note-content a.term-microbe   { color: var(--color-microbe);   border-bottom-color: var(--color-microbe); }
+  .note-content a.term-protein   { color: var(--color-protein);   border-bottom-color: var(--color-protein); }
+  .note-content a.term-pathology { color: var(--color-pathology); border-bottom-color: var(--color-pathology); }
+  .note-content a.term-anatomy   { color: var(--color-anatomy);   border-bottom-color: var(--color-anatomy); }
+  .note-content a.term-pharma    { color: var(--color-pharma);    border-bottom-color: var(--color-pharma); }
+
+  /* ---------- Media Embeds ---------- */
+  .media-embed{
+    margin: 32px 0;
+    background: var(--cream);
+    border: 2.5px solid var(--ink);
+    box-shadow: 4px 4px 0 var(--ink);
+    overflow:hidden;
+    transition: transform .18s var(--ease), box-shadow .18s var(--ease);
+  }
+  .media-embed:hover{ transform: translate(-2px,-2px); box-shadow: 6px 6px 0 var(--coral); }
+
+  .media-caption{
+    font-family: var(--font-mono);
+    font-weight:600; font-size:.72rem; letter-spacing:.03em;
+    color: var(--ink-soft);
+    padding: 12px 16px 0 16px;
+  }
+
+  .iframe-container{ position:relative; width:100%; padding-top:56.25%; }
+  .iframe-container iframe{ position:absolute; top:0; left:0; width:100%; height:100%; border:0; }
+
+  .tg-post-container{ padding-top:380px; background:#ffffff; }
+  html[data-theme="dark"] .tg-post-container{ background:#18222d; }
+
+  .media-image-wrap{ width:100%; }
+  .media-image-wrap img{ width:100%; height:auto; display:block; }
+
+  .media-btn{
+    display:flex; align-items:center; justify-content:center; gap:8px;
+    padding: 12px 16px;
+    font-family: var(--font-mono);
+    font-weight:700; font-size:.74rem;
+    letter-spacing:.06em; text-transform:uppercase;
+    text-decoration:none !important;
+    border-top: 2.5px solid var(--ink);
+    transition: background-color .2s var(--ease), color .2s var(--ease);
+  }
+  .btn-yt{ color:#c8102e; background: var(--cream); }
+  .btn-yt:hover{ background:#c8102e; color:#fff; }
+  .btn-tg{ color:#1580b8; background: var(--cream); }
+  .btn-tg:hover{ background:#1580b8; color:#fff; }
+  .icon-external{ width:14px; height:14px; stroke-width:2.5; }
+
+  .media-card{ display:flex; align-items:center; gap:16px; padding:22px; }
+  .card-icon{
+    width:44px; height:44px; background: var(--ink); color: var(--cream);
+    display:grid; place-items:center; flex-shrink:0;
+  }
+  .card-icon svg{ width:20px; height:20px; }
+  .card-text{ display:flex; flex-direction:column; gap:4px; }
+  .card-title{ font-family: var(--font-mono); font-weight:700; font-size:.86rem; color: var(--ink); }
+  .card-desc{ font-family: var(--font-body); font-weight:500; font-size:.78rem; color: var(--ink-soft); line-height:1.45; }
+
+  .media-audio-native{ padding: 18px 16px; }
+  .media-audio-native audio{ width:100%; }
+
+  /* ---------- channel row ---------- */
+  .channel-row{
+    display:flex; align-items:center; justify-content:space-between;
+    flex-wrap:wrap; gap:18px;
+    background: var(--ink);
+    color: var(--cream);
+    padding: clamp(20px, 3.5vw, 28px);
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .62s forwards;
+  }
+  .channel-label{
+    font-family: var(--font-mono); font-weight:700; font-size:.64rem;
+    letter-spacing:.18em; text-transform:uppercase; color: var(--coral);
+  }
+  .channel-link{
+    display:inline-flex; align-items:center; gap:13px;
+    text-decoration:none; padding:6px 0; border:none; background:none;
+    cursor:pointer; -webkit-tap-highlight-color:transparent;
+  }
+  .channel-icon{
+    width:32px; height:32px; border: 2px solid var(--cream);
+    display:grid; place-items:center; flex-shrink:0; color: var(--cream);
+    transition: transform .35s var(--ease), background-color .3s var(--ease);
+  }
+  .channel-link:hover .channel-icon{ background: var(--coral); border-color: var(--coral); color: var(--ink); transform: rotate(-8deg); }
+  .channel-icon svg{ width:15px; height:15px; }
+  .channel-copy{ text-align:left; }
+  html[dir="rtl"] .channel-copy{ text-align:right; }
+  .channel-name{
+    display:block; font-family: var(--font-display); font-weight:700;
+    font-size:1.12rem; color: var(--cream); transition: color .3s ease;
+  }
+  .channel-link:hover .channel-name{ color: var(--coral); }
+  .channel-handle{
+    display:block; font-family: var(--font-mono); font-weight:500; font-size:.72rem;
+    letter-spacing:.02em; color: var(--ink-faint);
+  }
+  .channel-cta{
+    font-family: var(--font-mono); font-weight:700; font-size:.66rem;
+    letter-spacing:.14em; text-transform:uppercase; color: var(--cream);
+    display:flex; align-items:center; gap:8px;
+    padding: 10px 16px;
+    background: var(--coral); color: var(--ink);
+    transition: gap .3s ease;
+  }
+  .channel-row:has(.channel-link:hover) .channel-cta{ gap:12px; }
+  .channel-cta svg{ width:13px; height:13px; }
+
+  /* ---------- footer ---------- */
+  .bottom-row{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-top: clamp(20px,4vw,30px);
+    opacity:0;
+    animation: fadeUp .7s var(--ease) .7s forwards;
+  }
+  .bottom-row .meta{
+    font-family: var(--font-mono); font-weight:600; font-size:.62rem;
+    letter-spacing:.12em; text-transform:uppercase; color: var(--ink-faint);
+  }
+  html[dir="rtl"] .bottom-row .meta + .meta{ text-align:left; }
+
+  @keyframes fadeUp{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:translateY(0); } }
+
+  @media (prefers-reduced-motion: reduce){
+    *,*::before,*::after{
+      animation-duration:.001ms !important;
+      animation-iteration-count:1 !important;
+      transition-duration:.001ms !important;
+    }
+  }
+
+  @media (max-width: 640px){
+    .identity{ flex-direction:column; align-items:flex-start; gap:16px; }
+    .channel-row{ flex-direction:column; align-items:flex-start; }
+    .channel-cta{ align-self:flex-start; }
+    .bottom-row{ flex-direction:column; align-items:flex-start; gap:6px; }
+  }
+
+  .error-box{
+    border: 2.5px solid var(--color-pathology);
+    background: var(--cream);
+    padding: 20px;
+    font-family: var(--font-mono);
+    color: var(--color-pathology);
+    font-weight:700;
+  }
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+
+<div class="stage">
+  <div class="plate hs-lg">
+
+    <div class="top-row">
+      <span class="brand-eyebrow">
+        <svg class="brand-cube" viewBox="0 0 100 100"><polygon points="30,25 70,25 70,65 30,65"/><polygon points="30,25 45,10 85,10 70,25"/><polygon points="70,25 85,10 85,50 70,65"/></svg>
+        Medicine <b>Cloud</b>
+      </span>
+      <div class="top-controls">
+        <button class="lang-toggle hs-sm hs-hover" id="langToggle" type="button" aria-label="Toggle Arabic and English">
+          <span id="langToggleLabel">EN</span>
+        </button>
+        <button class="theme-toggle hs-sm hs-hover" id="themeToggle" type="button" aria-label="Toggle light and dark theme">
+          <span class="toggle-icon">
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+          </span>
+          <span>Theme</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="main-block">
+
+      <div class="identity">
+        <button class="seal-btn hs-md hs-hover" id="logoBtn" type="button" aria-label="Open channel on Telegram">
+          <img src="https://i.ibb.co/Xxf7XStF/logo.png" alt="Logo" />
+        </button>
+        <div class="name-block">
+          <a class="name-link" id="nameLink" href="https://t.me/Murtadha_Basem" target="_blank" rel="noopener noreferrer" aria-label="Message on Telegram">
+            <h1 class="name-text">Murtadha<br><span class="hl">Basem</span></h1>
+          </a>
+          <p class="role-line">FOUNDER · MEDICINE CLOUD — LECTURE JOURNALS &amp; CLINICAL NOTES</p>
+        </div>
+      </div>
+
+      <div class="pulse-rule" aria-hidden="true">
+        <svg viewBox="0 0 1000 26" preserveAspectRatio="none">
+          <path class="pulse-line-shadow" d="M0 13 H400 L424 13 L440 2 L456 24 L470 8 L484 13 H1000" />
+          <path class="pulse-line" d="M0 13 H400 L424 13 L440 2 L456 24 L470 8 L484 13 H1000" />
+        </svg>
+      </div>
+
+      <!-- ============================================================
+           DYNAMIC NOTE CONTENT AREA
+           ============================================================ -->
+      <article class="note-container hs-md">
+        <h1 class="note-title" id="note-title">Loading Note...</h1>
+        <div class="note-meta-bar" id="note-meta-bar"></div>
+        <div class="note-content" id="note-content">
+          <!-- Dynamically generated HTML content will live here -->
+        </div>
+      </article>
+
+      <div class="channel-row hs-md">
+        <div>
+          <p class="channel-label">Stay current</p>
+          <a class="channel-link" id="channelLink" href="https://t.me/Medicine_Cloud" target="_blank" rel="noopener noreferrer" aria-label="Open Medicine Cloud Telegram channel">
+            <span class="channel-icon">
+              <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 4.5 18.9 19c-.2 1-.8 1.2-1.6.8l-4.5-3.3-2.2 2.1c-.2.2-.4.4-.8.4l.3-4.1L18 7.6c.3-.3-.1-.4-.4-.2L8 13.7l-4-1.2c-.9-.3-.9-.9.2-1.3L20.3 3.6c.7-.3 1.4.2 1.4.9Z"/></svg>
+            </span>
+            <span class="channel-copy">
+              <span class="channel-name">Medicine Cloud</span>
+              <span class="channel-handle">t.me/Medicine_Cloud</span>
+            </span>
+          </a>
+        </div>
+        <span class="channel-cta">
+          Join the channel
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+        </span>
+      </div>
+
+    </div>
+
+    <div class="bottom-row">
+      <span class="meta">Academic Session 2025 — 2026</span>
+      <span class="meta">Confidential / Academic</span>
+    </div>
+
+  </div>
+</div>
+
+<!-- ============================================================
+     PASTE THE GENERATED JSON ARRAY DIRECTLY INSIDE THIS SCRIPT BLOCK.
+     The JSON must be a single object (or an array containing exactly one
+     object) following the schema described in the companion prompt.
+     ============================================================ -->
+<script id="note-data" type="application/json">
+[
+  {
+    "title": "Protein Structure, Function & ABG Analysis",
+    "lang": "ar",
+    "unit": "Unit 1",
+    "content": "<h2>القسم الأول: بنية البروتين ووظيفته (Protein Structure and Function)</h2>\n<p>تؤدي البروتينات وظائف حيوية متعددة في الجسم، ومنها:</p>\n<ul>\n  <li>توجيه وتنظيم عملية التمثيل الغذائي (Metabolism) في الجسم عن طريق الإنزيمات والـ polypeptide hormones.</li>\n  <li>تمكين الحركة بفضل الـ contractile proteins في العضلات.</li>\n  <li>تكوين هيكل لترسيب بلورات فوسفات الكالسيوم (calcium phosphate crystals) في العظام بواسطة بروتين <a href='https://en.wikipedia.org/wiki/Collagen' class='term-protein' target='_blank' rel='noopener noreferrer'>collagen</a>.</li>\n  <li>نقل الجزيئات الضرورية للحياة في مجرى الدم بواسطة بروتينات مثل <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a> و <a href='https://en.wikipedia.org/wiki/Albumin' class='term-protein' target='_blank' rel='noopener noreferrer'>albumin</a>.</li>\n  <li>محاربة الالتهابات والبكتيريا والفيروسات بواسطة <a href='https://en.wikipedia.org/wiki/Antibody' class='term-protein' target='_blank' rel='noopener noreferrer'>Immunoglobulins</a>.</li>\n</ul>\n\n<h3>شحنة الأحماض الأمينية عند الـ pH الفسيولوجي (Physiologic pH)</h3>\n<p>At physiologic pH (7.35 to 7.45), the &alpha;-carboxyl groups, the acidic side chains, and the side chain of free <a href='https://en.wikipedia.org/wiki/Histidine' class='term-protein' target='_blank' rel='noopener noreferrer'>histidine</a> are deprotonated.</p>\n<p>تكون مجموعة الكربوكسيل (COO<sup>-</sup>) شحنتها سالبة والـ (NH<sub>3</sub><sup>+</sup>) شحنتها موجبة للحامض الأميني الواحد في هذه الظروف لأن العلاقة تكون:</p>\n<p><strong>pK<sub>a</sub>(NH<sub>3</sub><sup>+</sup>) &gt; pH &gt; pK<sub>a</sub>(COO<sup>-</sup>)</strong></p>\n<ul>\n  <li>حيث pK<sub>a</sub> لمجموعة الكربوكسيل يتراوح بين 2 - 4.</li>\n  <li>الـ pH الفسيولوجي يتراوح بين 7.35 - 7.45.</li>\n  <li>pK<sub>a</sub> لمجموعة الأمين يتراوح بين 9 - 10.</li>\n</ul>\n\n<h3>كراهية الماء (Hydrophobicity) وانطواء البروتين (Protein Folding)</h3>\n<p>عادةً الحامض الأميني غير القطبي (nonpolar) يكون داخلياً ومحمياً بالقطبي (polar) في الوسط المائي، والعكس صحيح في الوسط الدهني، وذلك باعتبار أن الـ polar محب للماء والـ nonpolar كاره له.</p>\n<p>هذه المعلومة مهمة وتبين أن البروتينات تتخذ أشكالاً معينة، فلو حدثت طفرة مثلاً في حمض polar فتحول إلى nonpolar، فسيتغير شكل البروتين بسبب حركة الجزيئة، مما يؤدي إلى حدوث مرض مثل فقر الدم المنجلي (<a href='https://en.wikipedia.org/wiki/Sickle_cell_disease' class='term-pathology' target='_blank' rel='noopener noreferrer'>sickle cell anemia</a>).</p>\n<p><strong>Sickle cell anemia</strong> results from the replacement of polar Glutamate with nonpolar Valine in the 6th position in the &beta;-subunit of <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a>.</p>\n\n<h3>أحماض أمينية مميزة وأواصر استقرار البنية</h3>\n<ul>\n  <li><strong>الـ <a href='https://en.wikipedia.org/wiki/Proline' class='term-protein' target='_blank' rel='noopener noreferrer'>Proline</a>:</strong> يكون متواجداً في الـ <a href='https://en.wikipedia.org/wiki/Collagen' class='term-protein' target='_blank' rel='noopener noreferrer'>collagen</a> بشكل كبير جداً لأنه حلقي (يحتوي على secondary amino group) فيعطي صلابة للـ collagen.</li>\n  <li><strong>تكوين آصرة ثنائي الكبريتيد (Disulfide bond):</strong>\n    <ul>\n      <li>السلسلة الجانبية (R) للـ <a href='https://en.wikipedia.org/wiki/Cysteine' class='term-protein' target='_blank' rel='noopener noreferrer'>cysteine</a> تحتوي على مجموعة ثيول (-SH).</li>\n      <li>في البروتين، يمكن لمجموعتي SH من جزيئتين cysteine أن تتأكسدا (can be oxidized) لتكوين آصرة تسمى <strong>Disulfide bond</strong>، وجزيئتا الـ cysteine تسميان بـ <a href='https://en.wikipedia.org/wiki/Cystine' class='term-protein' target='_blank' rel='noopener noreferrer'>cystine</a>.</li>\n      <li>العديد من البروتينات في الوسط خارج الخلوي (extracellular) تتثبت وتستقر بهذا النوع من الأواصر، مثل <a href='https://en.wikipedia.org/wiki/Albumin' class='term-protein' target='_blank' rel='noopener noreferrer'>Albumin</a> والـ <a href='https://en.wikipedia.org/wiki/Fibrinogen' class='term-protein' target='_blank' rel='noopener noreferrer'>Fibrinogen</a>.</li>\n    </ul>\n  </li>\n</ul>\n\n<h3>التعديلات الكيميائية للأحماض الأمينية (Chemical Modifications)</h3>\n<p>The hydroxyl group of <a href='https://en.wikipedia.org/wiki/Serine' class='term-protein' target='_blank' rel='noopener noreferrer'>serine</a>, <a href='https://en.wikipedia.org/wiki/Threonine' class='term-protein' target='_blank' rel='noopener noreferrer'>threonine</a>, and <a href='https://en.wikipedia.org/wiki/Tyrosine' class='term-protein' target='_blank' rel='noopener noreferrer'>tyrosine</a> can serve as a site of attachment for phosphate groups.</p>\n<ul>\n  <li>الـ <a href='https://en.wikipedia.org/wiki/Kinase' class='term-protein' target='_blank' rel='noopener noreferrer'>Kinases</a> يضيف الفسفرة لهذه الأحماض، والـ <a href='https://en.wikipedia.org/wiki/Phosphatase' class='term-protein' target='_blank' rel='noopener noreferrer'>Phosphatase</a> تلغي الفسفرة.</li>\n  <li>كما نعلم، فإن فسفرة هذه الأحماض تؤدي إلى تنشيطها فتعمل على تحفيز انقسام الخلية.</li>\n  <li><strong>زين هلقيت شنو يا شاطر 😉؟</strong> في الخلايا السرطانية نلاحظ كثرة هذه الظاهرة، لأن الخلايا السرطانية تنقسم بشكل غير منظم ومستمر، لذا نجد الـ <strong>Kinases</strong> مرتفعاً في هذه الخلايا!</li>\n</ul>\n<p><strong>ملاحظة حول الـ <a href='https://en.wikipedia.org/wiki/Histidine' class='term-protein' target='_blank' rel='noopener noreferrer'>Histidine</a>:</strong> هو قاعدة ضعيفة، وبحسب الـ pH الخاص بالوسط المحيط به إما أن يكون أيوناً موجباً أو متعادلاً، وهذا المفهوم مفيد جداً في عمل البفر (Buffer).</p>\n\n[[YT:hok2hyED9go|Protein Structure and Folding]]\n\n<h2>القسم الثاني: تحليل غازات الدم الشرياني (Arterial Blood Gases - ABG)</h2>\n<p>الـ pH الفسيولوجي في الدم يجب أن يبقى ثابتاً ونسبته الطبيعية تتراوح بين (7.35 - 7.45)، وتحدث فيه تغيرات نتيجة لبعض الأمراض (التي تدرس من جانبين تنفسي وأيضي):</p>\n<ul>\n  <li>الـ CO<sub>2</sub> في الجسم يتم التخلص منه عن طريق الرئتين (lung).</li>\n  <li>الـ H<sub>2</sub>CO<sub>3</sub> يتم طرحها بالبول من خلال الكلى.</li>\n</ul>\n\n<h3>معادلة التوازن الكيميائي وقاعدة لوشاتليه</h3>\n<p>تتمثل معادلة التوازن بالصيغة التالية:</p>\n<p><strong>CO<sub>2</sub> + H<sub>2</sub>O &rightleftharpoons; H<sub>2</sub>CO<sub>3</sub> &rightleftharpoons; H<sup>+</sup> + HCO<sub>3</sub><sup>-</sup></strong></p>\n<ul>\n  <li><strong>عند زيادة تركيز CO<sub>2</sub> بالدم:</strong> ينزاح التفاعل للأمام فيزداد تركيز [H<sup>+</sup>] (فيصير الدم حامضياً).</li>\n  <li><strong>عند نقصان تركيز CO<sub>2</sub> بالدم:</strong> ينزاح التفاعل للخلف فيقل تركيز [H<sup>+</sup>] (فيصير الدم قاعدياً).</li>\n  <li>نفس السلوك ينطبق على الـ [HCO<sub>3</sub><sup>-</sup>]!</li>\n  <li>عند تغير الـ CO<sub>2</sub> في الـ lung، تعمل الكلى على تنظيم حموضة الدم عن طريق طرح أو إبقاء الـ [HCO<sub>3</sub><sup>-</sup>]. لذا من الطبيعي أحياناً أن نرى الدم قاعدياً مع ارتفاع في الـ PCO<sub>2</sub> في بعض الحالات المرضية كآلية تعويضية.</li>\n  <li>عند وجود مشاكل في الرئة (lung)، نلاحظ ارتفاع الـ CO<sub>2</sub> (لأن الرئة مساهمة في التخلص منه).</li>\n  <li>عند وجود مشاكل في الكلى، نلاحظ ارتفاع الـ [HCO<sub>3</sub><sup>-</sup>] (لأن الكلى مسؤولة عن تنظيمه).</li>\n</ul>\n\n<h3>جدول ملخص لاضطرابات الحموضة والقاعدية (Acid-Base Disorders)</h3>\n<table border='1'>\n  <tr>\n    <th>pH</th>\n    <th>[H<sup>+</sup>]</th>\n    <th>المشكلة الأولية (Initial Issue)</th>\n    <th>الاستجابة والتعويض (Response)</th>\n    <th>الاضطراب (Disorder)</th>\n  </tr>\n  <tr>\n    <td>منخفض (Decreased)</td>\n    <td>مرتفع (Increased)</td>\n    <td>Hypoventilation; increased retention of CO<sub>2</sub> (more acid)</td>\n    <td>Increased renal retention of HCO<sub>3</sub><sup>-</sup> (more base)</td>\n    <td><a href='https://en.wikipedia.org/wiki/Acidosis' class='term-pathology' target='_blank' rel='noopener noreferrer'>Respiratory acidosis</a>; lungs not excreting enough acid as CO<sub>2</sub>, as in <a href='https://en.wikipedia.org/wiki/Chronic_obstructive_pulmonary_disease' class='term-pathology' target='_blank' rel='noopener noreferrer'>COPD</a></td>\n  </tr>\n  <tr>\n    <td>مرتفع (Increased)</td>\n    <td>منخفض (Decreased)</td>\n    <td>Hyperventilation; increased release of CO<sub>2</sub> (less acid)</td>\n    <td>Decreased renal retention of HCO<sub>3</sub><sup>-</sup> (less base)</td>\n    <td><a href='https://en.wikipedia.org/wiki/Alkalosis' class='term-pathology' target='_blank' rel='noopener noreferrer'>Respiratory alkalosis</a>; lungs excreting too much acid as CO<sub>2</sub>, as in hyperventilation and <a href='https://en.wikipedia.org/wiki/Asthma' class='term-pathology' target='_blank' rel='noopener noreferrer'>asthma</a></td>\n  </tr>\n  <tr>\n    <td>منخفض (Decreased)</td>\n    <td>مرتفع (Increased)</td>\n    <td>More acid generated</td>\n    <td>Less CO<sub>2</sub> released in breath (hypoventilation); HCO<sub>3</sub><sup>-</sup> will be low to attempt to buffer the acid</td>\n    <td><a href='https://en.wikipedia.org/wiki/Acidosis' class='term-pathology' target='_blank' rel='noopener noreferrer'>Metabolic acidosis</a>; body generates acid that cannot be excreted by lungs, as in lactic acidosis, <a href='https://en.wikipedia.org/wiki/Diabetic_ketoacidosis' class='term-pathology' target='_blank' rel='noopener noreferrer'>diabetic ketoacidosis</a>, ingestion of acid</td>\n  </tr>\n  <tr>\n    <td>مرتفع (Increased)</td>\n    <td>منخفض (Decreased)</td>\n    <td>HCO<sub>3</sub><sup>-</sup> increases</td>\n    <td>More CO<sub>2</sub> released in breath (hyperventilation); renal excretion of HCO<sub>3</sub><sup>-</sup></td>\n    <td><a href='https://en.wikipedia.org/wiki/Alkalosis' class='term-pathology' target='_blank' rel='noopener noreferrer'>Metabolic alkalosis</a>; when blood is alkaline and not caused by respiratory imbalance, as in excess loss of acid in vomiting or ingestion of a base</td>\n  </tr>\n</table>\n\n<h3>قواعد قراءة التحليل (Diagnostic Parameters)</h3>\n<ul>\n  <li><strong>تحديد حالة الحموضة والقاعدية:</strong>\n    <ul>\n      <li>pH مرتفع &rarr; <strong>Alkalosis</strong></li>\n      <li>pH منخفض &rarr; <strong>Acidosis</strong></li>\n    </ul>\n  </li>\n  <li><strong>المكون التنفسي PCO<sub>2</sub> (المعدل الطبيعي 35 - 45 mmHg):</strong>\n    <ul>\n      <li>ارتفاع أو انخفاض الـ PCO<sub>2</sub> يشير إلى اضطراب تنفسي <strong>Respiratory</strong>.</li>\n    </ul>\n  </li>\n  <li><strong>المكون الأيضي HCO<sub>3</sub><sup>-</sup> (المعدل الطبيعي 22 - 26 mEq/L):</strong>\n    <ul>\n      <li>ارتفاع أو انخفاض الـ HCO<sub>3</sub><sup>-</sup> يشير إلى اضطراب أيضي <strong>Metabolic</strong>.</li>\n    </ul>\n  </li>\n</ul>\n<p><strong>ملاحظة هامة:</strong> حالياً المطلوب هو معرفة كيفية قراءة التحليل وتحديد نوع الاضطراب والتعويض فقط، وتجنب الخوض في تفاصيل الأمراض المرتبطة به!</p>\n\n<h2>القسم الثالث: حل الكيسات السريرية (Case Studies)</h2>\n\n<h3>الكيس الأول (Case 1)</h3>\n<p>An 18-year-old female with a 15-year history of <a href='https://en.wikipedia.org/wiki/Diabetes_mellitus' class='term-pathology' target='_blank' rel='noopener noreferrer'>type 1 diabetes mellitus</a> is brought to the Emergency Department for evaluation of nausea, vomiting, and altered consciousness. Her blood glucose is 560 mg/dl (reference range for random glucose, &lt;200 mg/dl). Her arterial blood pH is 7.15 (reference range is 7.35 to 7.45) and bicarbonate is 12 mEq/l (reference range, 22 to 28 mEq/l). Which of the following is the expected compensation in her body in response to this acid-base imbalance?</p>\n<ul>\n  <li><strong>الخيارات:</strong>\n    <ol type='A'>\n      <li><strong>Increased respiration</strong></li>\n      <li>Increased renal release of acid</li>\n      <li>Increased renal retention of base</li>\n      <li>Decreased respiration</li>\n      <li>Decreased renal release of acid</li>\n    </ol>\n  </li>\n  <li><strong>الإجابة الصحيحة:</strong> <strong>A</strong></li>\n  <li><strong>التفسير:</strong> In response to a metabolic acidosis, compensation is respiratory. Increased respiration removes acid in the form of CO<sub>2</sub> from the body. Since the acid is being generated metabolically (diabetic ketoacidosis suspected) altered renal release of acid or retention of base would not be compensatory.</li>\n</ul>\n\n<h3>الكيس الثاني (Case 2)</h3>\n<ul>\n  <li><strong>القيم المعطاة:</strong>\n    <ul>\n      <li>pH = 7.52 (مرتفع &rarr; Alkalosis)</li>\n      <li>PaCO<sub>2</sub> = 46 mmHg (مرتفع كتعويض)</li>\n      <li>HCO<sub>3</sub><sup>-</sup> = 36 mEq/L (مرتفع &rarr; Metabolic)</li>\n    </ul>\n  </li>\n  <li><strong>التشخيص النهائي:</strong> <strong>Metabolic Alkalosis with Respiratory Compensation</strong></li>\n</ul>\n\n<h3>الكيس الثالث (Case 3)</h3>\n<ul>\n  <li><strong>القيم المعطاة:</strong>\n    <ul>\n      <li>pH = 7.25 (منخفض &rarr; Acidosis)</li>\n      <li>PaCO<sub>2</sub> = 28 mmHg (منخفض كتعويض)</li>\n      <li>HCO<sub>3</sub><sup>-</sup> = 12 mEq/L (منخفض &rarr; Metabolic)</li>\n    </ul>\n  </li>\n  <li><strong>التشخيص النهائي:</strong> <strong>Metabolic Acidosis with Respiratory Compensation</strong></li>\n</ul>\n\n<h3>الكيس الرابع (Case 4)</h3>\n<ul>\n  <li><strong>القيم المعطاة:</strong>\n    <ul>\n      <li>pH = 7.50 (مرتفع &rarr; Alkalosis)</li>\n      <li>PaCO<sub>2</sub> = 30 mmHg (منخفض &rarr; Respiratory)</li>\n      <li>HCO<sub>3</sub><sup>-</sup> = 23 mEq/L (طبيعي)</li>\n    </ul>\n  </li>\n  <li><strong>التشخيص النهائي:</strong> <strong>Acute Respiratory Alkalosis</strong></li>\n</ul>\n\n<h3>الكيس الخامس (Case 5)</h3>\n<ul>\n  <li><strong>القيم المعطاة:</strong>\n    <ul>\n      <li>pH = 7.28 (منخفض &rarr; Acidosis)</li>\n      <li>PaCO<sub>2</sub> = 55 mmHg (مرتفع &rarr; السبب تنفسي Respiratory)</li>\n      <li>HCO<sub>3</sub><sup>-</sup> = 25 mEq/L (طبيعي تقريباً &rarr; لا يوجد تعويض مهم)</li>\n    </ul>\n  </li>\n  <li><strong>التشخيص النهائي:</strong> <strong>Acute Respiratory Acidosis</strong></li>\n</ul>\n\n<p><strong>ملاحظة من القناة:</strong> الحكي كويس جوة الملف هذا بالقناة، اسمعوه.</p>\n[[TG_POST:athir_m1/208]]"
+  }
+]
+</script>
+
+<script>
+(function(){
+  const root = document.documentElement;
+  const themeToggle = document.getElementById('themeToggle');
+  const langToggleBtn = document.getElementById('langToggle');
+
+  // ---------- THEME ----------
+  function prefersDark(){
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+  function applyTheme(t){
+    root.setAttribute('data-theme', t);
+    try{ localStorage.setItem('mc-theme', t); }catch(e){}
+  }
+  let savedTheme = null;
+  try{ savedTheme = localStorage.getItem('mc-theme'); }catch(e){}
+  applyTheme(savedTheme || (prefersDark() ? 'dark' : 'light'));
+
+  themeToggle.addEventListener('click', function(){
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  });
+
+  document.getElementById('logoBtn').addEventListener('click', function(){
+    window.open('https://t.me/Medicine_Cloud', '_blank', 'noopener,noreferrer');
+  });
+
+  // ============================================================
+  // JSON RENDERING & MEDIA EMBEDDING
+  // ============================================================
+  let noteData = null;
+
+  function escapeHtml(str){
+    return String(str).replace(/[&<>"']/g, function(c){
+      return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c];
+    });
+  }
+
+  function processMediaTags(htmlContent){
+    // YouTube [[YT:VIDEO_ID]] or [[YT:VIDEO_ID|Caption text]]
+    htmlContent = htmlContent.replace(/\[\[YT:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, videoId, caption){
+      const id = videoId.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="iframe-container">' +
+                 '<iframe src="https://www.youtube.com/embed/' + id + '" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe>' +
+               '</div>' +
+               '<a href="https://www.youtube.com/watch?v=' + id + '" target="_blank" rel="noopener noreferrer" class="media-btn btn-yt">' +
+                 '<span>Watch on YouTube</span>' +
+                 '<svg class="icon-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>' +
+               '</a>' +
+             '</div>';
+    });
+
+    // Telegram public post embed [[TG_POST:channel/post_id]]
+    htmlContent = htmlContent.replace(/\[\[TG_POST:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, postPath, caption){
+      const path = postPath.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="iframe-container tg-post-container">' +
+                 '<iframe src="https://t.me/' + path + '?embed=1" scrolling="no" loading="lazy"></iframe>' +
+               '</div>' +
+               '<a href="https://t.me/' + path + '" target="_blank" rel="noopener noreferrer" class="media-btn btn-tg">' +
+                 '<span>View on Telegram</span>' +
+                 '<svg class="icon-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>' +
+               '</a>' +
+             '</div>';
+    });
+
+    // Telegram audio / voice message link (cannot be embedded) [[TG_AUDIO:full_url]]
+    htmlContent = htmlContent.replace(/\[\[TG_AUDIO:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, url, caption){
+      const rawUrl = url.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="media-card audio-card">' +
+                 '<div class="card-icon">' +
+                   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>' +
+                 '</div>' +
+                 '<div class="card-text">' +
+                   '<span class="card-title">Voice Message / Audio Clip</span>' +
+                   '<span class="card-desc">Audio files from Telegram cannot be embedded directly due to platform restrictions. Open the original on Telegram to listen.</span>' +
+                 '</div>' +
+               '</div>' +
+               '<a href="' + rawUrl + '" target="_blank" rel="noopener noreferrer" class="media-btn btn-tg">' +
+                 '<span>Listen on Telegram</span>' +
+                 '<svg class="icon-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>' +
+               '</a>' +
+             '</div>';
+    });
+
+    // Direct playable audio file [[AUDIO:full_url]] (e.g. mp3 hosted elsewhere)
+    htmlContent = htmlContent.replace(/\[\[AUDIO:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, url, caption){
+      const rawUrl = url.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="media-audio-native">' +
+                 '<audio controls preload="none" src="' + rawUrl + '"></audio>' +
+               '</div>' +
+             '</div>';
+    });
+
+    // Telegram-hosted image (cannot hotlink reliably) [[TG_IMAGE:full_url]]
+    htmlContent = htmlContent.replace(/\[\[TG_IMAGE:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, url, caption){
+      const rawUrl = url.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="media-card">' +
+                 '<div class="card-icon">' +
+                   '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>' +
+                 '</div>' +
+                 '<div class="card-text">' +
+                   '<span class="card-title">Telegram Hosted Image</span>' +
+                   '<span class="card-desc">Direct loading may require authentication. View the full resolution original via the button below.</span>' +
+                 '</div>' +
+               '</div>' +
+               '<a href="' + rawUrl + '" target="_blank" rel="noopener noreferrer" class="media-btn btn-tg">' +
+                 '<span>View Image on Telegram</span>' +
+                 '<svg class="icon-external" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6M15 3h6v6M10 14 21 3"/></svg>' +
+               '</a>' +
+             '</div>';
+    });
+
+    // Direct hotlinkable image [[IMAGE:full_url]] or [[IMAGE:full_url|Caption]]
+    htmlContent = htmlContent.replace(/\[\[IMAGE:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, url, caption){
+      const rawUrl = url.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="media-image-wrap"><img src="' + rawUrl + '" alt="' + (caption ? escapeHtml(caption.trim()) : 'Embedded image') + '" loading="lazy" /></div>' +
+             '</div>';
+    });
+
+    // Generic video file [[VIDEO:full_url]]
+    htmlContent = htmlContent.replace(/\[\[VIDEO:([^\]|]+)(?:\|([^\]]+))?\]\]/g, function(match, url, caption){
+      const rawUrl = url.trim();
+      const cap = caption ? '<div class="media-caption">' + escapeHtml(caption.trim()) + '</div>' : '';
+      return '<div class="media-embed">' + cap +
+               '<div class="iframe-container">' +
+                 '<video controls preload="none" style="position:absolute;top:0;left:0;width:100%;height:100%;background:#000;" src="' + rawUrl + '"></video>' +
+               '</div>' +
+             '</div>';
+    });
+
+    return htmlContent;
+  }
+
+  function renderNote(note){
+    if (!note) return;
+
+    const lang = (note.lang === 'ar') ? 'ar' : 'en';
+    const isRTL = lang === 'ar';
+
+    document.documentElement.setAttribute('lang', lang);
+    document.documentElement.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+
+    const titleEl = document.getElementById('note-title');
+    const contentEl = document.getElementById('note-content');
+    const metaBar = document.getElementById('note-meta-bar');
+
+    if (titleEl){
+      titleEl.textContent = note.title || 'Untitled Note';
+      titleEl.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+      document.title = (note.title || 'Note') + ' · Medicine Cloud';
+    }
+
+    if (metaBar){
+      metaBar.innerHTML = '';
+      const pills = [];
+      if (note.subject) pills.push(note.subject);
+      if (note.unit) pills.push(note.unit);
+      if (note.date) pills.push(note.date);
+      pills.forEach(function(p){
+        const span = document.createElement('span');
+        span.className = 'note-pill';
+        span.textContent = p;
+        metaBar.appendChild(span);
+      });
+    }
+
+    let htmlContent = note.content || '';
+    htmlContent = processMediaTags(htmlContent);
+
+    if (contentEl){
+      contentEl.innerHTML = htmlContent;
+      contentEl.setAttribute('dir', isRTL ? 'rtl' : 'ltr');
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    const jsonEl = document.getElementById('note-data');
+    if (!jsonEl) return;
+
+    try {
+      const rawJson = jsonEl.textContent.trim();
+      const parsed = JSON.parse(rawJson);
+      noteData = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch (e) {
+      console.error('JSON parsing error:', e);
+      const titleEl = document.getElementById('note-title');
+      const contentEl = document.getElementById('note-content');
+      if (titleEl) titleEl.textContent = 'Failed to load note data';
+      if (contentEl) contentEl.innerHTML = '<div class="error-box">There was a syntax error in the pasted JSON. Please check for unescaped quotes, missing commas, or unclosed brackets.</div>';
+      return;
+    }
+
+    if (!noteData) return;
+    renderNote(noteData);
+
+    // Language toggle only does something useful if a bilingual pair
+    // is supplied under note.alt (see prompt schema). Otherwise it's
+    // a no-op label toggle for visual consistency.
+    let showingAlt = false;
+    langToggleBtn.addEventListener('click', function(){
+      if (noteData.alt && noteData.alt.content){
+        showingAlt = !showingAlt;
+        if (showingAlt){
+          renderNote(noteData.alt);
+          document.getElementById('langToggleLabel').textContent = (noteData.lang === 'ar') ? 'EN' : 'AR';
+        } else {
+          renderNote(noteData);
+          document.getElementById('langToggleLabel').textContent = (noteData.lang === 'ar') ? 'AR' : 'EN';
+        }
+      }
+    });
+    document.getElementById('langToggleLabel').textContent = (noteData.lang === 'ar') ? 'AR' : 'EN';
+  });
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Note — Medicine Cloud</title>
+  <meta name="description" content="Medicine Cloud — note reader." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,500&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Quicksand:wght@400;500;600;700&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/base.css">
+  <link id="mc-template-link" rel="stylesheet" href="../css/templates/classic.css">
+
+  <style>
+    .btn-spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid var(--ink);
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: btnSpin 0.8s linear infinite;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+    @keyframes btnSpin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) {
+      .btn-spinner { animation: none; }
+    }
+    .card { border: 2.5px solid var(--ink); border-radius: 0; background: var(--card); }
+    .card-body { padding: 1.5rem; }
+    .tag { display: inline-block; padding: 0.25rem 0.75rem; border: 2.5px solid var(--ink); font-size: 0.85rem; font-weight: 600; border-radius: 0; }
+    .input { border: 2.5px solid var(--ink); border-radius: 0; padding: 0.5rem 0.75rem; background: var(--bg); color: var(--ink); outline: none; }
+    .input:focus { box-shadow: none; }
+    .btn-danger { background: var(--danger, #dc2626); color: #fff; border-color: var(--ink); }
+    .btn-danger:hover { background: var(--danger-hover, #b91c1c); }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MC_SUPABASE_URL = '__MC_SUPABASE_URL__';
+    window.MC_SUPABASE_ANON_KEY = '__MC_SUPABASE_ANON_KEY__';
+    window.CLOUDFLARE_WORKER_URL = '__CLOUDFLARE_WORKER_URL__';
+  </script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    const session = await requireAuth();
+    window.__MC_SESSION__ = session;
+  </script>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div class="corner tl" aria-hidden="true"></div>
+<div class="corner tr" aria-hidden="true"></div>
+<div class="corner bl" aria-hidden="true"></div>
+<div class="corner br" aria-hidden="true"></div>
+
+<div class="plate">
+
+  <div class="top-row">
+    <span class="brand-eyebrow">Medicine <b>Cloud</b></span>
+    <div class="top-controls">
+      <select id="template-switcher" class="template-switcher owner-only" aria-label="Select visual template">
+        <option value="classic">Classic</option>
+        <option value="academic-dark">Academic Dark</option>
+      </select>
+      <button class="lang-toggle" id="langToggle" type="button" aria-label="Toggle language">
+        <span id="langToggleLabel">EN</span>
+      </button>
+      <button class="theme-toggle" id="themeToggle" type="button" aria-label="Toggle light and dark theme">
+        <span class="toggle-icon">
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.4M12 19.1v2.4M4.2 4.2l1.7 1.7M18.1 18.1l1.7 1.7M2.5 12h2.4M19.1 12h2.4M4.2 19.8l1.7-1.7M18.1 5.9l1.7-1.7"/></svg>
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>
+        </span>
+        <span>Theme</span>
+      </button>
+      <button id="btnExportHtml" class="btn btn-sm" type="button" disabled aria-busy="false" aria-label="Export note as HTML file">Export as HTML</button>
+      <button id="btnExportPdf" class="btn btn-sm" type="button" disabled aria-busy="false" aria-label="Export note as PDF">
+        <span class="btn-text">Export as PDF</span>
+        <span class="btn-spinner" style="display:none;"></span>
+      </button>
+      <button id="btnSignOut" class="btn-sign-out owner-only" type="button" aria-label="Sign out">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="main-block">
+
+    <div class="rule-top" aria-hidden="true"></div>
+
+    <div class="identity">
+      <button class="seal-btn" id="logoBtn" type="button" aria-label="Open channel on Telegram">
+        <img src="https://i.ibb.co/Xxf7XStF/logo.png" alt="Logo" />
+      </button>
+      <div class="name-block">
+        <a class="name-link" id="nameLink" href="https://t.me/Murtadha_Basem" target="_blank" rel="noopener noreferrer" aria-label="Message on Telegram">
+          <h1 class="name-text">Murtadha<br><em>Basem</em></h1>
+          <span class="name-rule" aria-hidden="true"></span>
+        </a>
+        <p class="role-line">Founder, Medicine Cloud — Lecture Journals &amp; Clinical Notes</p>
+      </div>
+    </div>
+
+    <div class="ekg-rule" aria-hidden="true">
+      <svg viewBox="0 0 1000 28" preserveAspectRatio="none">
+        <path class="ekg-line" d="M0 14 H400 L424 14 L440 3 L456 25 L470 9 L484 14 H1000" />
+        <circle class="ekg-dot" cx="484" cy="14" r="3.2" />
+      </svg>
+    </div>
+
+    <article class="note-container">
+      <h1 class="note-title" id="note-title">Loading Note...</h1>
+      <div class="note-meta-bar" id="note-meta-bar"></div>
+      <div class="note-content" id="note-content"></div>
+    </article>
+
+    <div id="share-panel" class="card owner-only" style="display: none; margin-top: 2rem;">
+      <div class="card-body" style="width: 100%;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h3>Note Sharing</h3>
+          <span id="share-status" class="tag">Private</span>
+        </div>
+        <div id="share-private-state">
+          <p style="margin-bottom: 1rem;">Share this note publicly with others using a secure link.</p>
+          <button id="btnGenerateShare" class="btn btn-sm" type="button">Generate Share Link</button>
+        </div>
+        <div id="share-public-state" style="display: none;">
+          <p style="margin-bottom: 1rem;">Anyone with this link can view this note without logging in:</p>
+          <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem;">
+            <input id="share-url" class="input" type="text" readonly style="flex: 1;" />
+            <button id="btnCopyShare" class="btn btn-sm" type="button">Copy Link</button>
+          </div>
+          <button id="btnRevokeShare" class="btn btn-sm btn-danger" type="button">Revoke Sharing</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="channel-row">
+      <div>
+        <p class="channel-label">Stay current</p>
+        <a class="channel-link" id="channelLink" href="https://t.me/Medicine_Cloud" target="_blank" rel="noopener noreferrer" aria-label="Open Medicine Cloud Telegram channel">
+          <span class="channel-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21.7 4.5 18.9 19c-.2 1-.8 1.2-1.6.8l-4.5-3.3-2.2 2.1c-.2.2-.4.4-.8.4l.3-4.1L18 7.6c.3-.3-.1-.4-.4-.2L8 13.7l-4-1.2c-.9-.3-.9-.9.2-1.3L20.3 3.6c.7-.3 1.4.2 1.4.9Z"/></svg>
+          </span>
+          <span class="channel-copy">
+            <span class="channel-name">Medicine Cloud</span>
+            <span class="channel-handle">t.me/Medicine_Cloud</span>
+          </span>
+        </a>
+      </div>
+      <span class="channel-cta">
+        Join the channel
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </div>
+
+  </div>
+
+  <div class="bottom-row">
+    <span class="meta">Academic Session 2025 — 2026</span>
+    <span class="meta">Confidential / Academic</span>
+  </div>
+
+</div>
+
+<script id="note-data" type="application/json">
+{
+  "title": "Protein Structure, Function & ABG Analysis",
+  "lang": "ar",
+  "unit": "Unit 1",
+  "content": "<h2>القسم الأول: بنية البروتين ووظيفته (Protein Structure and Function)</h2>\n<p>تؤدي البروتينات وظائف حيوية متعددة في الجسم، ومنها:</p>\n<ul>\n  <li>توجيه وتنظيم عملية التمثيل الغذائي (Metabolism) في الجسم عن طريق الإنزيمات والـ polypeptide hormones.</li>\n  <li>تمكين الحركة بفضل الـ contractile proteins في العضلات.</li>\n  <li>تكوين هيكل لترسيب بلورات فوسفات الكالسيوم (calcium phosphate crystals) في العظام بواسطة بروتين <a href='https://en.wikipedia.org/wiki/Collagen' class='term-protein' target='_blank' rel='noopener noreferrer'>collagen</a>.</li>\n  <li>نقل الجزيئات الضرورية للحياة في مجرى الدم بواسطة بروتينات مثل <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a> و <a href='https://en.wikipedia.org/wiki/Albumin' class='term-protein' target='_blank' rel='noopener noreferrer'>albumin</a>.</li>\n  <li>محاربة الالتهابات والبكتيريا والفيروسات بواسطة <a href='https://en.wikipedia.org/wiki/Antibody' class='term-protein' target='_blank' rel='noopener noreferrer'>Immunoglobulins</a>.</li>\n</ul>\n\n[[YT:dQw4w9WgXcQ|Watch: Protein Folding Animation]]\n\n[[TG_POST:athir_m1/208|View discussion on Telegram]]",
+  "alt": {
+    "title": "Protein Structure, Function & ABG Analysis",
+    "lang": "en",
+    "content": "<h2>Section 1: Protein Structure and Function</h2>\n<p>Proteins perform many vital functions in the body, including:</p>\n<ul>\n  <li>Directing and regulating metabolism through enzymes and polypeptide hormones.</li>\n  <li>Enabling movement via contractile proteins in muscles.</li>\n  <li>Forming a scaffold for deposition of calcium phosphate crystals in bone through <a href='https://en.wikipedia.org/wiki/Collagen' class='term-protein' target='_blank' rel='noopener noreferrer'>collagen</a>.</li>\n  <li>Transporting essential molecules in the blood via proteins like <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a> and <a href='https://en.wikipedia.org/wiki/Albumin' class='term-protein' target='_blank' rel='noopener noreferrer'>albumin</a>.</li>\n  <li>Fighting infections and pathogens through <a href='https://en.wikipedia.org/wiki/Antibody' class='term-protein' target='_blank' rel='noopener noreferrer'>Immunoglobulins</a>.</li>\n</ul>\n\n[[YT:dQw4w9WgXcQ|Watch: Protein Folding Animation]]"
+  }
+}
+</script>
+
+<script type="module">
+  import { renderNote } from '../js/renderer.js';
+  import { loadTemplate, getActiveTemplate } from '../js/templates.js';
+  import { signOut as authSignOut } from '../js/auth.js';
+  import { exportHTML } from '../js/export.js';
+  import { enableSharing, revokeSharing, getNoteByShareToken } from '../js/notes.js';
+  import { requestPDFExport } from '../js/pdf.js';
+
+  let noteData = null;
+  let showingAlt = false;
+
+  function prefersDark() {
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  }
+
+  function applyTheme(t) {
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('mc-theme', t); } catch (e) {}
+  }
+
+  let savedTheme = null;
+  try { savedTheme = localStorage.getItem('mc-theme'); } catch (e) {}
+  applyTheme(savedTheme || (prefersDark() ? 'dark' : 'light'));
+
+  document.getElementById('themeToggle').addEventListener('click', function() {
+    const root = document.documentElement;
+    const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+    applyTheme(next);
+  });
+
+  const activeTemplate = getActiveTemplate();
+  const switcher = document.getElementById('template-switcher');
+  if (switcher) {
+    switcher.value = activeTemplate;
+    loadTemplate(activeTemplate);
+    switcher.addEventListener('change', function() {
+      loadTemplate(this.value);
+    });
+  }
+
+  const noteContainer = document.querySelector('.note-container');
+
+  function renderActiveLanguage() {
+    const target = showingAlt && noteData.alt ? noteData.alt : noteData;
+    renderNote(target, noteContainer);
+  }
+
+  function enableExportButtons() {
+    var htmlBtn = document.getElementById('btnExportHtml');
+    if (htmlBtn) htmlBtn.disabled = false;
+    var pdfBtn = document.getElementById('btnExportPdf');
+    if (pdfBtn) pdfBtn.disabled = false;
+  }
+
+  function setupLangToggle() {
+    const langToggle = document.getElementById('langToggle');
+    const langLabel = document.getElementById('langToggleLabel');
+    if (!langToggle) return;
+
+    if (noteData.alt && noteData.alt.content) {
+      langToggle.disabled = false;
+      langToggle.style.display = '';
+      langLabel.textContent = noteData.lang === 'ar' ? 'EN' : 'AR';
+
+      langToggle.addEventListener('click', function() {
+        showingAlt = !showingAlt;
+        const target = showingAlt ? noteData.alt : noteData;
+        renderNote(target, noteContainer);
+        langLabel.textContent = showingAlt
+          ? (noteData.lang === 'ar' ? 'AR' : 'EN')
+          : (noteData.lang === 'ar' ? 'EN' : 'AR');
+      });
+    } else {
+      langToggle.disabled = true;
+      langToggle.style.display = 'none';
+    }
+  }
+
+  function setupExportHtmlButton() {
+    var exportBtn = document.getElementById('btnExportHtml');
+    if (!exportBtn) return;
+    exportBtn.addEventListener('click', async function() {
+      exportBtn.disabled = true;
+      exportBtn.setAttribute('aria-busy', 'true');
+      exportBtn.textContent = 'Exporting...';
+      try {
+        await exportHTML(noteData, getActiveTemplate());
+      } catch (e) {
+        console.error('Export failed:', e);
+        showError('Export failed: ' + e.message);
+      } finally {
+        exportBtn.disabled = false;
+        exportBtn.setAttribute('aria-busy', 'false');
+        exportBtn.textContent = 'Export as HTML';
+      }
+    });
+  }
+
+  function setupExportPdfButton() {
+    var pdfBtn = document.getElementById('btnExportPdf');
+    if (!pdfBtn) return;
+    pdfBtn.addEventListener('click', async function() {
+      var textSpan = pdfBtn.querySelector('.btn-text');
+      var spinner = pdfBtn.querySelector('.btn-spinner');
+      pdfBtn.disabled = true;
+      pdfBtn.setAttribute('aria-busy', 'true');
+      if (textSpan) textSpan.textContent = 'Generating PDF...';
+      if (spinner) spinner.style.display = 'inline-block';
+      try {
+        await requestPDFExport(noteData, getActiveTemplate());
+      } catch (e) {
+        console.error('PDF export failed:', e);
+        showError('Failed to generate PDF: ' + e.message);
+      } finally {
+        pdfBtn.disabled = false;
+        pdfBtn.setAttribute('aria-busy', 'false');
+        if (textSpan) textSpan.textContent = 'Export as PDF';
+        if (spinner) spinner.style.display = 'none';
+      }
+    });
+  }
+
+  function showError(message) {
+    var statusEl = document.getElementById('note-meta-bar');
+    if (!statusEl) return;
+    var errMsg = document.createElement('div');
+    errMsg.className = 'error-state';
+    errMsg.textContent = message;
+    statusEl.prepend(errMsg);
+    setTimeout(function() { errMsg.remove(); }, 5000);
+  }
+
+  async function loadNoteByToken(token) {
+    document.querySelectorAll('.owner-only').forEach(function(el) { el.style.display = 'none'; });
+
+    var jsonEl = document.getElementById('note-data');
+    if (jsonEl) jsonEl.remove();
+
+    var { data, error } = await getNoteByShareToken(token);
+    if (error || !data) {
+      noteContainer.innerHTML = '<div class="error-box"><strong>Note not found or no longer shared</strong></div>';
+      return;
+    }
+    noteData = data;
+    setupLangToggle();
+    renderActiveLanguage();
+    enableExportButtons();
+    setupExportHtmlButton();
+    setupExportPdfButton();
+  }
+
+  function renderSharePanel(note) {
+    var panel = document.getElementById('share-panel');
+    var privateState = document.getElementById('share-private-state');
+    var publicState = document.getElementById('share-public-state');
+    var statusTag = document.getElementById('share-status');
+    var urlInput = document.getElementById('share-url');
+
+    if (!panel) return;
+
+    if (note.is_public && note.share_token) {
+      privateState.style.display = 'none';
+      publicState.style.display = '';
+      statusTag.textContent = 'Public';
+      urlInput.value = location.origin + '/pages/note.html?share=' + note.share_token;
+    } else {
+      privateState.style.display = '';
+      publicState.style.display = 'none';
+      statusTag.textContent = 'Private';
+    }
+    panel.style.display = '';
+  }
+
+  function setupSharePanel(note) {
+    if (!note || !note.id) return;
+
+    var generateBtn = document.getElementById('btnGenerateShare');
+    var copyBtn = document.getElementById('btnCopyShare');
+    var revokeBtn = document.getElementById('btnRevokeShare');
+
+    if (generateBtn) {
+      generateBtn.addEventListener('click', async function() {
+        generateBtn.disabled = true;
+        generateBtn.textContent = 'Generating...';
+        var { data, error } = await enableSharing(note.id);
+        generateBtn.disabled = false;
+        generateBtn.textContent = 'Generate Share Link';
+        if (error) {
+          showError('Failed to generate share link: ' + error.message);
+          return;
+        }
+        noteData = data;
+        renderSharePanel(data);
+      });
+    }
+
+    if (copyBtn) {
+      copyBtn.addEventListener('click', async function() {
+        var url = document.getElementById('share-url').value;
+        try {
+          await navigator.clipboard.writeText(url);
+          copyBtn.textContent = 'Copied!';
+          setTimeout(function() { copyBtn.textContent = 'Copy Link'; }, 2000);
+        } catch (e) {
+          var input = document.getElementById('share-url');
+          input.focus();
+          input.select();
+        }
+      });
+    }
+
+    if (revokeBtn) {
+      revokeBtn.addEventListener('click', async function() {
+        revokeBtn.disabled = true;
+        revokeBtn.textContent = 'Revoking...';
+        var { data, error } = await revokeSharing(note.id);
+        revokeBtn.disabled = false;
+        revokeBtn.textContent = 'Revoke Sharing';
+        if (error) {
+          showError('Failed to revoke sharing: ' + error.message);
+          return;
+        }
+        noteData = data;
+        renderSharePanel(data);
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    var urlParams = new URLSearchParams(location.search);
+    var token = urlParams.get('token');
+    var shareToken = urlParams.get('share');
+
+    if (shareToken) {
+      loadNoteByToken(shareToken);
+      return;
+    }
+
+    if (token) {
+      loadNoteByToken(token);
+      return;
+    }
+
+    const jsonEl = document.getElementById('note-data');
+    if (!jsonEl) return;
+
+    try {
+      const rawJson = jsonEl.textContent.trim();
+      const parsed = JSON.parse(rawJson);
+      noteData = parsed;
+
+      setupLangToggle();
+      renderActiveLanguage();
+      enableExportButtons();
+      setupExportHtmlButton();
+      setupExportPdfButton();
+      renderSharePanel(noteData);
+      setupSharePanel(noteData);
+    } catch (e) {
+      console.error('JSON parsing error:', e);
+    }
+  });
+</script>
+
+</body>
+</html>

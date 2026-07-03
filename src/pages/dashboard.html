@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('mc-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Medicine Cloud</title>
+  <link rel="stylesheet" href="../css/base.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MC_SUPABASE_URL = '__MC_SUPABASE_URL__';
+    window.MC_SUPABASE_ANON_KEY = '__MC_SUPABASE_ANON_KEY__';
+  </script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    const session = await requireAuth();
+    if (session) window.__MC_SESSION__ = session;
+  </script>
+
+  <style>
+    .dashboard-spinner {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 4rem 2rem;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid var(--ink);
+      border-top-color: var(--coral);
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      padding: 4rem 2rem;
+      text-align: center;
+    }
+    .empty-state.show { display: flex; }
+    .empty-state svg { width: 80px; height: 80px; }
+    .empty-state h2 { font-size: 1.5rem; }
+    .empty-state p { color: var(--ink-soft); max-width: 320px; }
+
+    .grid-section {
+      display: none;
+    }
+    .grid-section.show { display: block; }
+
+    .dashboard-card {
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .dashboard-card:hover {
+      transform: translateY(-3px);
+      box-shadow:
+        1px 1px  0 var(--ink),
+        2px 2px  0 var(--ink),
+        3px 3px  0 var(--ink),
+        4px 4px  0 var(--ink),
+        5px 5px  0 var(--ink),
+        6px 6px  0 var(--ink),
+        7px 7px  0 var(--ink),
+        8px 8px  0 var(--ink);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      width: 100%;
+    }
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: bold;
+      flex: 1;
+    }
+    .card-options-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 1.3rem;
+      line-height: 1;
+      padding: 0.2rem 0.4rem;
+      color: var(--ink);
+      position: relative;
+    }
+    .card-options-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: var(--cream);
+      border: 2.5px solid var(--ink);
+      z-index: 10;
+      min-width: 140px;
+    }
+    .card-options-menu.show { display: block; }
+    .card-options-menu button {
+      display: block;
+      width: 100%;
+      background: none;
+      border: none;
+      border-block-end: 1px solid var(--ink);
+      padding: 0.5rem 1rem;
+      text-align: left;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 0.9rem;
+      color: var(--ink);
+    }
+    .card-options-menu button:last-child { border-block-end: none; }
+    .card-options-menu button:hover { background: var(--ink); color: var(--cream); }
+
+    .card-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      width: 100%;
+    }
+    .card-date {
+      font-size: 0.85rem;
+      color: var(--ink-soft);
+      width: 100%;
+    }
+
+    .view-toggle {
+      display: flex;
+      gap: 1rem;
+      margin-block-end: 1.5rem;
+    }
+    .view-toggle button {
+      background: none;
+      border: none;
+      border-block-end: 2px solid transparent;
+      padding: 0.5rem 0;
+      cursor: pointer;
+      font-family: var(--font-ui);
+      font-size: 1rem;
+      color: var(--ink);
+      transition: border-color 0.15s ease;
+    }
+    .view-toggle button.active { border-block-end-color: var(--ink); font-weight: bold; }
+
+    .trash-section { display: none; }
+    .trash-section.show { display: block; }
+
+    .trash-empty {
+      display: none;
+      text-align: center;
+      padding: 3rem;
+      color: var(--ink-soft);
+    }
+    .trash-empty.show { display: block; }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      background: var(--ink);
+      color: var(--cream);
+      padding: 1rem 1.5rem;
+      border: var(--border);
+      z-index: 2000;
+      display: none;
+      max-width: 360px;
+    }
+    .toast.show { display: block; }
+    .toast.error { background: var(--coral); color: var(--cream); border-color: var(--ink); }
+
+    .modal-hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <span class="app-brand">Medicine Cloud</span>
+    <nav class="app-nav">
+      <a href="dashboard.html" class="nav-link active">Dashboard</a>
+      <a href="editor.html" class="nav-link">New Note</a>
+      <a href="settings.html" class="nav-link">Settings</a>
+    </nav>
+  </header>
+
+  <div class="page-wrap">
+    <!-- Loading Spinner -->
+    <div id="loading-spinner" class="dashboard-spinner">
+      <div class="spinner"></div>
+      <p>Loading your notes...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div id="empty-state" class="empty-state">
+      <svg viewBox="0 0 80 80" fill="none">
+        <rect x="20" y="10" width="40" height="55" stroke="var(--ink)" stroke-width="2.5" fill="var(--cream)"/>
+        <line x1="30" y1="25" x2="50" y2="25" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="30" y1="33" x2="50" y2="33" stroke="var(--ink)" stroke-width="2"/>
+        <line x1="30" y1="41" x2="45" y2="41" stroke="var(--ink)" stroke-width="2"/>
+        <path d="M60 30L70 20L70 55L60 45" stroke="var(--coral)" stroke-width="2.5" fill="none"/>
+      </svg>
+      <h2>No notes yet</h2>
+      <p>Create your first medical note to get started. Your notes will appear here once saved.</p>
+      <a href="editor.html" class="btn btn-primary btn-lg">New Note</a>
+    </div>
+
+    <!-- Active Notes Grid -->
+    <div id="grid-section" class="grid-section">
+      <div class="view-toggle">
+        <button id="view-active" class="active">Active Notes</button>
+        <button id="view-trash">Trash</button>
+      </div>
+      <div id="notes-grid" class="notes-grid"></div>
+    </div>
+
+    <!-- Trash Section -->
+    <div id="trash-section" class="trash-section">
+      <div class="view-toggle">
+        <button id="trash-view-active">Active Notes</button>
+        <button id="trash-view-trash" class="active">Trash</button>
+      </div>
+      <p style="margin-block-end: 1rem; color: var(--ink-soft);">Notes in trash are kept for recovery. Use "Restore" to bring them back or "Permanently Erase" to delete forever.</p>
+      <div id="trash-grid" class="notes-grid"></div>
+      <div id="trash-empty" class="trash-empty">Trash is empty.</div>
+    </div>
+  </div>
+
+  <!-- Soft-Delete Confirmation Modal -->
+  <div id="delete-modal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-title">Delete Note</div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this note? It will be moved to trash and can be restored later.</p>
+      </div>
+      <div class="modal-actions">
+        <button id="delete-cancel" class="btn">Cancel</button>
+        <button id="delete-confirm" class="btn btn-danger">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hard-Delete First Confirmation Modal -->
+  <div id="hard-delete-modal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-title">Permanently Erase Note</div>
+      <div class="modal-body">
+        <p>This action <strong>cannot be undone</strong>. The note will be permanently erased from the database.</p>
+      </div>
+      <div class="modal-actions">
+        <button id="hard-delete-cancel" class="btn">Cancel</button>
+        <button id="hard-delete-first-confirm" class="btn btn-danger">Continue to Erase</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hard-Delete Second Confirmation Modal -->
+  <div id="hard-delete-final-modal" class="modal-overlay modal-hidden">
+    <div class="modal">
+      <div class="modal-title">Final Confirmation</div>
+      <div class="modal-body">
+        <p style="font-weight: bold; color: var(--coral);">Are you absolutely sure? This permanently erases the note and cannot be undone.</p>
+      </div>
+      <div class="modal-actions">
+        <button id="hard-delete-final-cancel" class="btn">Cancel</button>
+        <button id="hard-delete-final-confirm" class="btn btn-danger">Erase Permanently</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script type="module">
+    import { listNotes, listTrash, softDeleteNote, restoreNote, hardDeleteNote } from '../js/notes.js';
+
+    const loadingEl = document.getElementById('loading-spinner');
+    const emptyEl = document.getElementById('empty-state');
+    const gridSection = document.getElementById('grid-section');
+    const notesGrid = document.getElementById('notes-grid');
+    const trashSection = document.getElementById('trash-section');
+    const trashGrid = document.getElementById('trash-grid');
+    const trashEmpty = document.getElementById('trash-empty');
+    const toast = document.getElementById('toast');
+
+    let currentTrashNoteId = null;
+    let currentHardDeleteNoteId = null;
+
+    function showToast(msg, isError = false) {
+      toast.textContent = msg;
+      toast.className = 'toast show' + (isError ? ' error' : '');
+      setTimeout(() => { toast.className = 'toast'; }, 4000);
+    }
+
+    function formatDate(d) {
+      if (!d) return '';
+      const dt = new Date(d);
+      return dt.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    }
+
+    function renderNoteCard(note, isTrash = false) {
+      const card = document.createElement('div');
+      card.className = 'card dashboard-card';
+
+      const header = document.createElement('div');
+      header.className = 'card-header';
+
+      const title = document.createElement('div');
+      title.className = 'card-title';
+      title.textContent = note.title || 'Untitled';
+
+      header.appendChild(title);
+
+      if (!isTrash) {
+        const menuWrapper = document.createElement('div');
+        menuWrapper.style.position = 'relative';
+
+        const btn = document.createElement('button');
+        btn.className = 'card-options-btn';
+        btn.textContent = '\u22EF';
+        btn.setAttribute('aria-label', 'Note options');
+
+        const menu = document.createElement('div');
+        menu.className = 'card-options-menu';
+        const deleteOpt = document.createElement('button');
+        deleteOpt.textContent = 'Delete';
+        deleteOpt.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.classList.remove('show');
+          currentTrashNoteId = note.id;
+          document.getElementById('delete-modal').classList.remove('modal-hidden');
+        });
+        menu.appendChild(deleteOpt);
+
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          menu.classList.toggle('show');
+        });
+        document.addEventListener('click', () => menu.classList.remove('show'), { once: false });
+
+        menuWrapper.appendChild(btn);
+        menuWrapper.appendChild(menu);
+        header.appendChild(menuWrapper);
+
+        card.addEventListener('click', () => {
+          window.location.href = 'note.html?id=' + note.id;
+        });
+      }
+
+      card.appendChild(header);
+
+      if (note.subject || note.unit) {
+        const pills = document.createElement('div');
+        pills.className = 'card-pills';
+        if (note.subject) {
+          const s = document.createElement('span');
+          s.className = 'tag tag-coral';
+          s.textContent = note.subject;
+          pills.appendChild(s);
+        }
+        if (note.unit) {
+          const u = document.createElement('span');
+          u.className = 'tag';
+          u.textContent = note.unit;
+          pills.appendChild(u);
+        }
+        card.appendChild(pills);
+      }
+
+      const dateEl = document.createElement('div');
+      dateEl.className = 'card-date';
+      if (isTrash && note.deleted_at) {
+        dateEl.textContent = 'Deleted: ' + formatDate(note.deleted_at);
+      } else {
+        dateEl.textContent = formatDate(note.date || note.created_at);
+      }
+      card.appendChild(dateEl);
+
+      if (isTrash) {
+        const actions = document.createElement('div');
+        actions.style.cssText = 'display:flex; gap:0.5rem; width:100%; margin-top:0.5rem;';
+
+        const restoreBtn = document.createElement('button');
+        restoreBtn.className = 'btn';
+        restoreBtn.textContent = 'Restore';
+        restoreBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const { error } = await restoreNote(note.id);
+          if (error) {
+            showToast('Failed to restore note: ' + error.message, true);
+          } else {
+            showToast('Note restored successfully.');
+            await loadTrashView();
+          }
+        });
+        actions.appendChild(restoreBtn);
+
+        const eraseBtn = document.createElement('button');
+        eraseBtn.className = 'btn btn-danger';
+        eraseBtn.textContent = 'Permanently Erase';
+        eraseBtn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          currentHardDeleteNoteId = note.id;
+          document.getElementById('hard-delete-modal').classList.remove('modal-hidden');
+        });
+        actions.appendChild(eraseBtn);
+
+        card.appendChild(actions);
+      }
+
+      return card;
+    }
+
+    async function loadActiveView() {
+      loadingEl.style.display = 'flex';
+      emptyEl.classList.remove('show');
+      gridSection.classList.remove('show');
+      trashSection.classList.remove('show');
+
+      const { data, error } = await listNotes();
+
+      loadingEl.style.display = 'none';
+
+      if (error) {
+        showToast('Failed to load notes: ' + error.message, true);
+        return;
+      }
+
+      notesGrid.innerHTML = '';
+
+      if (!data || data.length === 0) {
+        emptyEl.classList.add('show');
+        return;
+      }
+
+      gridSection.classList.add('show');
+      data.forEach(note => {
+        notesGrid.appendChild(renderNoteCard(note, false));
+      });
+    }
+
+    async function loadTrashView() {
+      trashGrid.innerHTML = '';
+      trashEmpty.classList.remove('show');
+
+      const { data, error } = await listTrash();
+
+      if (error) {
+        showToast('Failed to load trash: ' + error.message, true);
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        trashEmpty.classList.add('show');
+        return;
+      }
+
+      data.forEach(note => {
+        trashGrid.appendChild(renderNoteCard(note, true));
+      });
+    }
+
+    function showActiveView() {
+      gridSection.classList.add('show');
+      trashSection.classList.remove('show');
+      document.getElementById('view-active').classList.add('active');
+      document.getElementById('view-trash').classList.remove('active');
+    }
+
+    function showTrashView() {
+      gridSection.classList.remove('show');
+      trashSection.classList.add('show');
+      document.getElementById('view-active').classList.remove('active');
+      document.getElementById('view-trash').classList.add('active');
+      loadTrashView();
+    }
+
+    document.getElementById('view-active').addEventListener('click', showActiveView);
+    document.getElementById('view-trash').addEventListener('click', showTrashView);
+    document.getElementById('trash-view-active').addEventListener('click', showActiveView);
+    document.getElementById('trash-view-trash').addEventListener('click', showTrashView);
+
+    // Soft-delete modal handlers
+    document.getElementById('delete-cancel').addEventListener('click', () => {
+      document.getElementById('delete-modal').classList.add('modal-hidden');
+      currentTrashNoteId = null;
+    });
+    document.getElementById('delete-confirm').addEventListener('click', async () => {
+      if (!currentTrashNoteId) return;
+      const { error } = await softDeleteNote(currentTrashNoteId);
+      document.getElementById('delete-modal').classList.add('modal-hidden');
+      if (error) {
+        showToast('Failed to delete note: ' + error.message, true);
+      } else {
+        showToast('Note moved to trash.');
+        await loadActiveView();
+      }
+      currentTrashNoteId = null;
+    });
+
+    // Hard-delete first modal handlers
+    document.getElementById('hard-delete-cancel').addEventListener('click', () => {
+      document.getElementById('hard-delete-modal').classList.add('modal-hidden');
+    });
+    document.getElementById('hard-delete-first-confirm').addEventListener('click', () => {
+      document.getElementById('hard-delete-modal').classList.add('modal-hidden');
+      document.getElementById('hard-delete-final-modal').classList.remove('modal-hidden');
+    });
+
+    // Hard-delete final modal handlers
+    document.getElementById('hard-delete-final-cancel').addEventListener('click', () => {
+      document.getElementById('hard-delete-final-modal').classList.add('modal-hidden');
+      currentHardDeleteNoteId = null;
+    });
+    document.getElementById('hard-delete-final-confirm').addEventListener('click', async () => {
+      if (!currentHardDeleteNoteId) return;
+      const { error } = await hardDeleteNote(currentHardDeleteNoteId);
+      document.getElementById('hard-delete-final-modal').classList.add('modal-hidden');
+      if (error) {
+        showToast('Failed to erase note: ' + error.message, true);
+      } else {
+        showToast('Note permanently erased.');
+        await loadTrashView();
+      }
+      currentHardDeleteNoteId = null;
+    });
+
+    await loadActiveView();
+  </script>
+</body>
+</html>

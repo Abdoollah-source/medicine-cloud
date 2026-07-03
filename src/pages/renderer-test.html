@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('mc-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Note Renderer Test</title>
+  <meta name="description" content="Medicine Cloud — note renderer validation page." />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,500;0,7..72,600;1,7..72,400&family=Cairo:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <link rel="stylesheet" href="../css/base.css" />
+  <link rel="stylesheet" href="../css/templates/classic.css" />
+
+  <style>
+    :root {
+      --bg-page: #eef0f4;
+      --bg-card: #ffffff;
+      --text-primary: #4c4f69;
+      --text-soft: #767a92;
+      --border-color: #c7cbd8;
+      --color-microbe: #2e7d32;
+      --color-protein: #1565c0;
+      --color-pathology: #c62828;
+      --color-anatomy: #e65100;
+      --color-pharma: #6a1b9a;
+      --bg-term: rgba(76,79,105,.05);
+      --media-bg: #e6e9ef;
+    }
+
+    html[data-theme="dark"] {
+      --bg-page: #0a0d13;
+      --bg-card: #11161f;
+      --text-primary: #e7e2d3;
+      --text-soft: #9b9685;
+      --border-color: #2b3140;
+      --color-microbe: #a1dbb3;
+      --color-protein: #a3c7fc;
+      --color-pathology: #fca3b5;
+      --color-anatomy: #ffd09b;
+      --color-pharma: #d6b3f5;
+      --bg-term: rgba(231,226,211,.05);
+      --media-bg: #0e121a;
+    }
+
+    body {
+      background: var(--bg-page);
+      color: var(--text-primary);
+      transition: background-color .4s ease, color .4s ease;
+    }
+
+    #app {
+      max-width: 860px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .note-renderer {
+      background: var(--bg-card);
+      border: 2.5px solid var(--text-primary);
+      padding: 2rem;
+      box-shadow: 4px 4px 0 var(--text-primary);
+    }
+
+    #note-title {
+      font-family: 'Cairo', sans-serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 1.3;
+      margin-block-end: 1rem;
+    }
+
+    #note-meta-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-block-end: 1.5rem;
+    }
+
+    .note-pill {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      background: var(--media-bg);
+      border: 2px solid var(--border-color);
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    #note-content {
+      font-family: 'Literata', Georgia, serif;
+      font-size: 1rem;
+      line-height: 1.75;
+    }
+
+    #note-content[dir="rtl"] {
+      font-family: 'Cairo', sans-serif;
+    }
+
+    #note-content h2,
+    #note-content h3 {
+      font-family: 'Quicksand', sans-serif;
+      margin-block: 1.5rem 0.75rem;
+      font-weight: 700;
+    }
+
+    #note-content h2 {
+      font-size: 1.35rem;
+    }
+
+    #note-content h3 {
+      font-size: 1.15rem;
+    }
+
+    #note-content p {
+      margin-block-end: 1rem;
+    }
+
+    #note-content ul,
+    #note-content ol {
+      margin-block-end: 1rem;
+      padding-inline-start: 1.5rem;
+    }
+
+    #note-content li {
+      margin-block-end: 0.35rem;
+    }
+
+    #note-content a {
+      color: var(--color-protein);
+      text-decoration: underline;
+      text-underline-offset: 2px;
+    }
+
+    #note-content a.term-microbe { color: var(--color-microbe); }
+    #note-content a.term-protein { color: var(--color-protein); }
+    #note-content a.term-pathology { color: var(--color-pathology); }
+    #note-content a.term-anatomy { color: var(--color-anatomy); }
+    #note-content a.term-pharma { color: var(--color-pharma); }
+
+    #note-content strong {
+      font-weight: 700;
+    }
+
+    #note-content table {
+      border-collapse: collapse;
+      width: 100%;
+      margin-block-end: 1rem;
+    }
+
+    #note-content th,
+    #note-content td {
+      border: 2px solid var(--border-color);
+      padding: 0.5rem 0.75rem;
+      text-align: start;
+    }
+
+    #note-content th {
+      background: var(--media-bg);
+      font-weight: 700;
+    }
+
+    .error-box {
+      background: var(--bg-card);
+      border: 2.5px solid var(--color-pathology);
+      padding: 2rem;
+      text-align: center;
+      box-shadow: 4px 4px 0 var(--color-pathology);
+    }
+
+    .error-box strong {
+      display: block;
+      font-size: 1.1rem;
+      margin-block-end: 0.5rem;
+    }
+
+    .error-box p {
+      color: var(--text-soft);
+    }
+
+    .media-embed {
+      margin-block: 1.5rem;
+    }
+
+    .iframe-container {
+      position: relative;
+      width: 100%;
+      padding-bottom: 56.25%;
+      background: var(--media-bg);
+    }
+
+    .iframe-container iframe,
+    .iframe-container video {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+
+    .tg-post-container {
+      padding-bottom: 0;
+      height: 480px;
+      max-height: 80vh;
+    }
+
+    .tg-post-container iframe {
+      position: static;
+      width: 100%;
+      height: 100%;
+      border: 2px solid var(--border-color);
+    }
+
+    .media-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-block-start: 0.75rem;
+      padding: 0.5rem 1rem;
+      border: 2px solid var(--border-color);
+      background: var(--media-bg);
+      text-decoration: none;
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.85rem;
+      font-weight: 600;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .media-btn:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 3px 3px 0 var(--border-color);
+    }
+
+    .media-btn span {
+      color: var(--text-primary);
+    }
+
+    .media-caption {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin-block-end: 0.5rem;
+      font-style: italic;
+    }
+
+    .media-card {
+      border: 2px solid var(--border-color);
+      padding: 1.25rem;
+      background: var(--media-bg);
+      margin-block: 1.5rem;
+    }
+
+    .media-card .card-text {
+      margin-block-end: 0.75rem;
+    }
+
+    .media-card .card-title {
+      display: block;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      margin-block-end: 0.25rem;
+    }
+
+    .media-card .card-desc {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+    }
+
+    .media-image {
+      margin-block: 1.5rem;
+    }
+
+    .media-image img {
+      max-width: 100%;
+      height: auto;
+      border: 2px solid var(--border-color);
+    }
+
+    .media-image figcaption {
+      font-family: 'Quicksand', sans-serif;
+      font-size: 0.85rem;
+      color: var(--text-soft);
+      margin-block-start: 0.5rem;
+      font-style: italic;
+    }
+
+    #note-content audio {
+      width: 100%;
+      margin-block: 0.5rem;
+    }
+
+    .theme-toggle {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 100;
+      width: 44px;
+      height: 44px;
+      border: 2.5px solid var(--text-primary);
+      background: var(--bg-card);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      box-shadow: 3px 3px 0 var(--text-primary);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    .theme-toggle:hover {
+      transform: translate(-2px, -2px);
+      box-shadow: 5px 5px 0 var(--text-primary);
+    }
+
+    .theme-toggle:active {
+      transform: translate(1px, 1px);
+      box-shadow: 1px 1px 0 var(--text-primary);
+    }
+
+    @media (max-width: 360px) {
+      #app {
+        margin: 1rem auto;
+        padding: 0 0.5rem;
+      }
+      .note-renderer {
+        padding: 1rem;
+      }
+      #note-title {
+        font-size: 1.35rem;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      body,
+      .media-btn,
+      .theme-toggle {
+        transition-duration: 0.001ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <button class="theme-toggle" id="themeToggle" aria-label="Toggle theme">&#9790;</button>
+
+  <div id="app">
+    <div class="note-renderer">
+      <h1 id="note-title"></h1>
+      <div id="note-meta-bar"></div>
+      <div id="note-content"></div>
+    </div>
+  </div>
+
+  <script id="note-data" type="application/json">
+  {
+    "title": "Protein Structure, Function & ABG Analysis",
+    "lang": "ar",
+    "unit": "Unit 1",
+    "content": "<h2>القسم الأول: بنية البروتين ووظيفته (Protein Structure and Function)</h2>\n<p>تؤدي البروتينات وظائف حيوية متعددة في الجسم، ومنها:</p>\n<ul>\n  <li>توجيه وتنظيم عملية التمثيل الغذائي (Metabolism) في الجسم عن طريق الإنزيمات والـ polypeptide hormones.</li>\n  <li>تمكين الحركة بفضل الـ contractile proteins في العضلات.</li>\n  <li>تكوين هيكل لترسيب بلورات فوسفات الكالسيوم (calcium phosphate crystals) في العظام بواسطة بروتين <a href='https://en.wikipedia.org/wiki/Collagen' class='term-protein' target='_blank' rel='noopener noreferrer'>collagen</a>.</li>\n  <li>نقل الجزيئات الضرورية للحياة في مجرى الدم بواسطة بروتينات مثل <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a> و <a href='https://en.wikipedia.org/wiki/Albumin' class='term-protein' target='_blank' rel='noopener noreferrer'>albumin</a>.</li>\n  <li>محاربة الالتهابات والبكتيريا والفيروسات بواسطة <a href='https://en.wikipedia.org/wiki/Antibody' class='term-protein' target='_blank' rel='noopener noreferrer'>Immunoglobulins</a>.</li>\n</ul>\n\n<h3>شحنة الأحماض الأمينية عند الـ pH الفسيولوجي (Physiologic pH)</h3>\n<p>At physiologic pH (7.35 to 7.45), the α-carboxyl groups, the acidic side chains, and the side chain of free <a href='https://en.wikipedia.org/wiki/Histidine' class='term-protein' target='_blank' rel='noopener noreferrer'>histidine</a> are deprotonated.</p>\n<p>تكون مجموعة الكربوكسيل (COO−) شحنتها سالبة والـ (NH<sub>3</sub>+) شحنتها موجبة للحامض الأميني الواحد في هذه الظروف لأن العلاقة تكون:</p>\n<p><strong>pK<sub>a</sub>(NH<sub>3</sub>+) &gt; pH &gt; pK<sub>a</sub>(COO−)</strong></p>\n<ul>\n  <li>حيث pK<sub>a</sub> لمجموعة الكربوكسيل يتراوح بين 2 - 4.</li>\n  <li>الـ pH الفسيولوجي يتراوح بين 7.35 - 7.45.</li>\n  <li>pK<sub>a</sub> لمجموعة الأمين يتراوح بين 9 - 10.</li>\n</ul>\n\n<h3>كراهية الماء (Hydrophobicity) وانطواء البروتين (Protein Folding)</h3>\n<p>عادةً ما تتواجد الأحماض الأمينية ذات السلاسل الجانبية الكارهة للماء (nonpolar/hydrophobic) في داخل البروتين الكروي (globular protein)، بعيداً عن الوسط المائي.</p>\n<p>أما الأحماض الأمينية ذات السلاسل الجانبية القطبية وغير المشحونة (polar uncharged) والمشحونة (charged) تتواجد على سطح البروتين، حيث يمكنها التفاعل مع جزيئات الماء.</p>\n\n<p><strong>Example (EN):</strong> In <a href='https://en.wikipedia.org/wiki/Hemoglobin' class='term-protein' target='_blank' rel='noopener noreferrer'>hemoglobin</a>, the hydrophobic <a href='https://en.wikipedia.org/wiki/Amino_acid' class='term-protein' target='_blank' rel='noopener noreferrer'>amino acids</a> cluster in the interior, while charged residues like glutamate and lysine face the aqueous environment.</p>\n\n[[YT:dQw4w9WgXcQ|Watch: Protein Folding Animation]]\n\n[[TG_POST:athir_m1/208|View discussion on Telegram]]\n\n[[TG_AUDIO:https://t.me/athir_m1/voice.ogg|Lecture audio clip]]\n\n[[AUDIO:https://example.com/audio.mp3|Supplementary audio]]\n\n[[TG_IMAGE:https://t.me/athir_m1/photo.jpg|Referenced diagram]]\n\n[[IMAGE:https://example.com/protein-structure.jpg|Protein structure diagram]]\n\n[[VIDEO:https://example.com/animation.mp4|Molecular animation]]"
+  }
+  </script>
+
+  <script type="module">
+    import { renderNote } from '../js/renderer.js';
+
+    function prefersDark() {
+      return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    }
+
+    function applyTheme(t) {
+      document.documentElement.setAttribute('data-theme', t);
+      try { localStorage.setItem('mc-theme', t); } catch(e) {}
+    }
+
+    let savedTheme = null;
+    try { savedTheme = localStorage.getItem('mc-theme'); } catch(e) {}
+    applyTheme(savedTheme || (prefersDark() ? 'dark' : 'light'));
+
+    document.getElementById('themeToggle').addEventListener('click', function() {
+      const root = document.documentElement;
+      const next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      applyTheme(next);
+    });
+
+    document.addEventListener('DOMContentLoaded', function() {
+      const jsonEl = document.getElementById('note-data');
+      if (!jsonEl) return;
+
+      try {
+        const rawJson = jsonEl.textContent.trim();
+        const parsed = JSON.parse(rawJson);
+        const noteData = parsed;
+        renderNote(noteData, document.getElementById('app'));
+      } catch (e) {
+        console.error('JSON parsing error:', e);
+      }
+    });
+  </script>
+
+</body>
+</html>

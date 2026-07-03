@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('mc-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login — Medicine Cloud</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="../css/base.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <script>
+    window.MC_SUPABASE_URL = '__MC_SUPABASE_URL__';
+    window.MC_SUPABASE_ANON_KEY = '__MC_SUPABASE_ANON_KEY__';
+  </script>
+
+  <style>
+    body {
+      background: var(--cream);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Quicksand', sans-serif;
+    }
+
+    .login-card {
+      background: var(--cream);
+      border: 2.5px solid var(--ink);
+      padding: 3rem 2.5rem;
+      max-width: 400px;
+      width: 100%;
+      box-shadow:
+        1px 1px  0 var(--ink),
+        2px 2px  0 var(--ink),
+        3px 3px  0 var(--ink),
+        4px 4px  0 var(--ink),
+        5px 5px  0 var(--ink),
+        6px 6px  0 var(--ink),
+        7px 7px  0 var(--ink);
+      text-align: center;
+    }
+
+    .login-brand {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-block-end: 0.5rem;
+      color: var(--ink);
+    }
+
+    .login-subtitle {
+      font-size: 0.9rem;
+      color: var(--coral);
+      margin-block-end: 2rem;
+      font-weight: 500;
+    }
+
+    .btn-sign-in {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      font-size: 1.05rem;
+      font-family: 'Quicksand', sans-serif;
+      font-weight: 700;
+      letter-spacing: 0.03em;
+      cursor: pointer;
+    }
+
+    .error-state {
+      display: none;
+      margin-block-start: 1.5rem;
+      padding: 1rem;
+      border: 2.5px solid var(--coral);
+      background: var(--cream);
+      color: var(--coral);
+      font-size: 0.9rem;
+      font-weight: 600;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-brand">Medicine Cloud</div>
+    <div class="login-subtitle">Invite-only Access</div>
+
+    <button class="btn btn-primary btn-sign-in" id="btnGoogleSignIn">Sign In with Google</button>
+
+    <div class="error-state" id="auth-error"></div>
+  </div>
+
+  <script type="module">
+    import { initAuth, signInWithGoogle } from '../js/auth.js';
+
+    initAuth();
+
+    document.getElementById('btnGoogleSignIn').addEventListener('click', () => {
+      signInWithGoogle();
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neo-Brutalist Design System Test</title>
+    <link rel="stylesheet" href="../css/base.css">
+</head>
+<body>
+    <div class="page-wrap">
+        <h1 style="text-align: center; margin-block-end: 2rem;">Neo-Brutalist Design System Test</h1>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Cards</h2>
+            <div class="notes-grid">
+                <div class="card card-icon-layout">
+                    <svg width="70" height="70" viewBox="0 0 100 100" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+                        <polygon points="30,25 70,25 70,65 30,65"/>
+                        <polygon points="30,25 45,10 85,10 70,25"/>
+                        <polygon points="70,25 85,10 85,50 70,65"/>
+                        <line x1="30" y1="25" x2="70" y2="25"/>
+                    </svg>
+                    <span>Cube Card</span>
+                </div>
+
+                <div class="card card-icon-layout">
+                    <svg width="70" height="70" viewBox="0 0 100 100" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+                        <polygon points="20,35 65,35 65,75 20,75"/>
+                        <polygon points="20,35 35,20 80,20 65,35"/>
+                        <polygon points="65,35 80,20 80,60 65,75"/>
+                    </svg>
+                    <span>Block Card</span>
+                </div>
+
+                <div class="card card-icon-layout">
+                    <svg width="70" height="70" viewBox="0 0 100 100" stroke="var(--ink)" stroke-width="2.5" fill="none" stroke-linejoin="round" stroke-linecap="round">
+                        <polygon points="25,50 55,50 55,80 25,80"/>
+                        <polygon points="25,50 38,38 68,38 55,50"/>
+                        <polygon points="55,50 68,38 68,68 55,80"/>
+                        <polygon points="30,25 55,25 55,50 30,50"/>
+                        <polygon points="30,25 40,17 65,17 55,25"/>
+                        <polygon points="55,25 65,17 65,42 55,50"/>
+                    </svg>
+                    <span>Stacked Block</span>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Buttons</h2>
+            <div style="display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap;">
+                <button class="btn">Base</button>
+                <button class="btn btn-primary">Primary</button>
+                <button class="btn btn-danger">Danger</button>
+                <button class="btn btn-lg">Large</button>
+                <button class="btn btn-sm">Small</button>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Form Elements</h2>
+            <div class="form-group">
+                <label class="label">Username</label>
+                <input class="input" type="text" placeholder="Enter username">
+            </div>
+            <div class="form-group">
+                <label class="label">Message</label>
+                <textarea class="textarea" placeholder="Enter message"></textarea>
+            </div>
+            <div class="form-group">
+                <label class="label">Select</label>
+                <select class="select">
+                    <option>Option 1</option>
+                    <option>Option 2</option>
+                    <option>Option 3</option>
+                </select>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Navigation</h2>
+            <div class="app-header">
+                <div class="app-brand">Medicine Cloud</div>
+                <nav class="app-nav">
+                    <a href="#" class="nav-link active">Home</a>
+                    <a href="#" class="nav-link">Dashboard</a>
+                    <a href="#" class="nav-link">Settings</a>
+                </nav>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Modal</h2>
+            <div class="modal-overlay" style="position: static; min-height: 250px;">
+                <div class="modal">
+                    <div class="modal-title">Confirm Action</div>
+                    <div class="modal-body">Are you sure you want to proceed with this action?</div>
+                    <div class="modal-actions">
+                        <button class="btn btn-sm">Cancel</button>
+                        <button class="btn btn-sm btn-primary">Confirm</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Tags</h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <span class="tag">Default</span>
+                <span class="tag tag-coral">Coral</span>
+            </div>
+        </section>
+
+        <section style="margin-block-end: 2.5rem;">
+            <h2 style="margin-block-end: 1rem;">Note Content (Exempt from Neo-Brutalist)</h2>
+            <div style="background: white; padding: 1rem;">
+                <p>This area is intentionally exempt from neo-brutalist styling. It retains its own typographic system for rendered note content.</p>
+            </div>
+        </section>
+    </div>
+
+    <script>
+        var theme = localStorage.getItem('mc-theme');
+        if (theme) {
+            document.documentElement.style.setProperty('--theme', theme);
+        }
+    </script>
+</body>
+</html>

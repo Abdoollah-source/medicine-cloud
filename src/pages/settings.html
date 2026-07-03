@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script>
+    (function() {
+      try {
+        var saved = localStorage.getItem('mc-theme');
+        var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) {}
+    })();
+  </script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Settings — Medicine Cloud</title>
+  <meta name="description" content="Medicine Cloud account settings — sign out, manage account.">
+  <link rel="stylesheet" href="../css/base.css">
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script>
+    window.MC_SUPABASE_URL = '__MC_SUPABASE_URL__';
+    window.MC_SUPABASE_ANON_KEY = '__MC_SUPABASE_ANON_KEY__';
+  </script>
+  <script type="module">
+    import { requireAuth } from '../js/auth.js';
+    const session = await requireAuth();
+    window.__MC_SESSION__ = session;
+  </script>
+</head>
+<body>
+
+  <header class="app-header">
+    <span class="app-brand">Medicine Cloud</span>
+    <nav class="app-nav">
+      <a href="dashboard.html" class="nav-link">Dashboard</a>
+      <a href="editor.html" class="nav-link">New Note</a>
+      <a href="settings.html" class="nav-link active">Settings</a>
+    </nav>
+  </header>
+
+  <div class="page-wrap">
+    <h1 style="margin-block-end: 2rem;">Settings</h1>
+
+    <div class="card" style="max-width: 520px;">
+      <div class="card-body" style="width: 100%;">
+        <h2 style="font-size: 1.1rem; margin-block-end: 0.5rem;">Account</h2>
+        <p id="user-email" style="margin-block-end: 1.5rem; color: var(--ink-soft);">Loading…</p>
+        <button id="btnSignOut" class="btn btn-danger" type="button">Sign Out</button>
+      </div>
+    </div>
+
+    <div class="card" style="max-width: 520px; margin-top: 2rem;">
+      <div class="card-body" style="width: 100%;">
+        <h2 style="font-size: 1.1rem; margin-block-end: 0.5rem;">Visual Template</h2>
+        <p style="margin-block-end: 1rem; color: var(--ink-soft);">Default template applied when viewing notes.</p>
+        <select id="templateSelect" class="select" style="max-width: 240px;"></select>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { signOut } from '../js/auth.js';
+    import { loadTemplate, getActiveTemplate, TEMPLATES } from '../js/templates.js';
+
+    // Show user email
+    const emailEl = document.getElementById('user-email');
+    const session = window.__MC_SESSION__;
+    if (session && session.user && session.user.email) {
+      emailEl.textContent = session.user.email;
+    } else {
+      emailEl.textContent = 'Not signed in';
+    }
+
+    // Sign out
+    document.getElementById('btnSignOut').addEventListener('click', async () => {
+      await signOut();
+    });
+
+    // Template selector
+    const select = document.getElementById('templateSelect');
+    select.innerHTML = '';
+    Object.keys(TEMPLATES).forEach(key => {
+      const opt = document.createElement('option');
+      opt.value = key;
+      opt.textContent = key === 'classic' ? 'Classic' : 'Academic Dark';
+      select.appendChild(opt);
+    });
+    select.value = getActiveTemplate();
+    select.addEventListener('change', () => {
+      loadTemplate(select.value);
+    });
+  </script>
+
+</body>
+</html>

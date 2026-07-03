@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hard Shadow Cards — Cube Edition</title>
+<style>
+  :root{
+    --cream:#f4e9d8;
+    --ink:#111111;
+    --coral:#ff6f59;
+  }
+
+  *{margin:0; padding:0; box-sizing:border-box;}
+
+  body{
+    background:var(--cream);
+    color:var(--ink);
+    font-family:-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:4rem 2rem;
+  }
+
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3, 1fr);
+    gap:2.5rem;
+    max-width:900px;
+  }
+
+  .card{
+    background:var(--cream);
+    border:2.5px solid var(--ink);
+    border-radius:0;
+    padding:2rem 1.5rem;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:1rem;
+    cursor:pointer;
+    /* permanent depth: stacked layers give the card physical thickness */
+    box-shadow:
+      1px 1px  0 var(--ink),
+      2px 2px  0 var(--ink),
+      3px 3px  0 var(--ink),
+      4px 4px  0 var(--ink),
+      5px 5px  0 var(--ink),
+      6px 6px  0 var(--ink),
+      7px 7px  0 var(--ink);
+    transition:transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .card:hover{
+    transform:translate(-4px, -4px);
+    box-shadow:
+      1px 1px  0 var(--ink),
+      2px 2px  0 var(--ink),
+      3px 3px  0 var(--ink),
+      4px 4px  0 var(--ink),
+      5px 5px  0 var(--ink),
+      6px 6px  0 var(--ink),
+      7px 7px  0 var(--ink),
+      8px 8px  0 var(--ink),
+      9px 9px  0 var(--ink),
+      10px 10px 0 var(--ink),
+      11px 11px 0 var(--coral);
+  }
+
+  .card svg{
+    width:70px;
+    height:70px;
+    stroke:var(--ink);
+    stroke-width:2.5;
+    fill:none;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+  }
+
+  .card:hover svg{
+    stroke:var(--coral);
+  }
+
+  .card p{
+    font-size:0.85rem;
+    letter-spacing:0.03em;
+    text-align:center;
+  }
+
+  @media (max-width:600px){
+    .grid{grid-template-columns:1fr; gap:1.6rem;}
+  }
+</style>
+</head>
+<body>
+
+  <div class="grid">
+
+    <!-- simple cube -->
+    <div class="card">
+      <svg viewBox="0 0 100 100">
+        <polygon points="30,25 70,25 70,65 30,65"/>
+        <polygon points="30,25 45,10 85,10 70,25"/>
+        <polygon points="70,25 85,10 85,50 70,65"/>
+        <line x1="30" y1="25" x2="70" y2="25"/>
+      </svg>
+      <p>cube</p>
+    </div>
+
+    <!-- rectangular block -->
+    <div class="card">
+      <svg viewBox="0 0 100 100">
+        <polygon points="20,35 65,35 65,75 20,75"/>
+        <polygon points="20,35 35,20 80,20 65,35"/>
+        <polygon points="65,35 80,20 80,60 65,75"/>
+      </svg>
+      <p>rectangular cube</p>
+    </div>
+
+    <!-- stacked cube -->
+    <div class="card">
+      <svg viewBox="0 0 100 100">
+        <polygon points="25,50 55,50 55,80 25,80"/>
+        <polygon points="25,50 38,38 68,38 55,50"/>
+        <polygon points="55,50 68,38 68,68 55,80"/>
+        <polygon points="30,25 55,25 55,50 30,50"/>
+        <polygon points="30,25 40,17 65,17 55,25"/>
+        <polygon points="55,25 65,17 65,42 55,50"/>
+      </svg>
+      <p>stacked block</p>
+    </div>
+
+  </div>
+
+</body>
+</html>

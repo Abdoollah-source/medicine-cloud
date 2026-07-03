@@ -1,0 +1,20 @@
+name = "mc-pdf-export"
+main = "src/functions/pdf-export.js"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[browser]
+binding = "MY_BROWSER"
+
+[vars]
+# APP_ORIGIN is set per-environment below — do not put live URLs here.
+
+[env.production.vars]
+# Set APP_ORIGIN via: wrangler secret put APP_ORIGIN --env production
+# Example value: https://your-project.pages.dev
+
+[env.production.browser]
+binding = "MY_BROWSER"
+
+# [env.preview.vars]
+# APP_ORIGIN = "https://your-preview.pages.dev"
