@@ -13,7 +13,7 @@ function makeSlug(title) {
 
 async function requestPDFExport(note, templateId) {
   var workerUrl = window.CLOUDFLARE_WORKER_URL;
-  if (!workerUrl || workerUrl === '__CLOUDFLARE_WORKER_URL__') {
+  if (!workerUrl || workerUrl.startsWith('__')) {
     throw new Error('PDF worker URL is not configured.');
   }
 
