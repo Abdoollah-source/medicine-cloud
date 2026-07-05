@@ -12,6 +12,9 @@ function makeSlug(title) {
 }
 
 async function requestPDFExport(note, templateId) {
+  if (!note || !note.id) {
+    throw new Error('Cannot export PDF: note ID is missing. PDF export requires a saved note.');
+  }
   var workerUrl = window.CLOUDFLARE_WORKER_URL;
   if (!workerUrl || workerUrl.startsWith('__')) {
     throw new Error('PDF worker URL is not configured.');

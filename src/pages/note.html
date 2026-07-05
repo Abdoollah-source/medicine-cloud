@@ -78,7 +78,7 @@
         <span>Theme</span>
       </button>
       <button id="btnExportHtml" class="btn btn-sm" type="button" disabled aria-busy="false" aria-label="Export note as HTML file">Export as HTML</button>
-      <button id="btnExportPdf" class="btn btn-sm" type="button" disabled aria-busy="false" aria-label="Export note as PDF">
+      <button id="btnExportPdf" class="btn btn-sm owner-only" type="button" disabled aria-busy="false" aria-label="Export note as PDF">
         <span class="btn-text">Export as PDF</span>
         <span class="btn-spinner" style="display:none;"></span>
       </button>
@@ -240,7 +240,9 @@
     var htmlBtn = document.getElementById('btnExportHtml');
     if (htmlBtn) htmlBtn.disabled = false;
     var pdfBtn = document.getElementById('btnExportPdf');
-    if (pdfBtn) pdfBtn.disabled = false;
+    if (pdfBtn && noteData && noteData.id) {
+      pdfBtn.disabled = false;
+    }
   }
 
   function setupLangToggle() {
