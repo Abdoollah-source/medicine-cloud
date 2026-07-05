@@ -11,42 +11,71 @@ function makeSlug(title) {
     || 'note';
 }
 
-async function requestPDFExport(note, templateId) {
-  if (!note || !note.id) {
-    throw new Error('Cannot export PDF: note ID is missing. PDF export requires a saved note.');
-  }
-  var workerUrl = window.CLOUDFLARE_WORKER_URL;
-  if (!workerUrl || workerUrl.startsWith('__')) {
-    throw new Error('PDF worker URL is not configured.');
-  }
-
-  var shareResult = await enableSharing(note.id);
-  if (shareResult.error) throw shareResult.error;
-  if (!shareResult.data || !shareResult.data.share_token) {
-    throw new Error('Failed to generate share token.');
-  }
-
-  var shareToken = shareResult.data.share_token;
-  var publicUrl = location.origin + '/pages/note.html?token=' + shareToken + '&template=' + (templateId || 'classic');
-
-  var response = await fetch(workerUrl + '?url=' + encodeURIComponent(publicUrl));
-  if (!response.ok) {
-    var errText = await response.text().catch(function() { return response.statusText; });
-    throw new Error('PDF worker returned ' + response.status + ': ' + errText);
-  }
-
-  var blob = await response.blob();
-
-  var slug = makeSlug(note.title);
+function buildFilename(note) {
+  var slug = makeSlug(note && note.title);
   var date = new Date().toISOString().slice(0, 10);
-  var filename = 'medicine-cloud-' + slug + '-' + date + '.pdf';
+  return 'medicine-cloud-' + slug + '-' + date;
+}
 
-  var a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
+// Zero-cost fallback: browser's native print-to-PDF. Always works, no
+// network dependency. Used whenever the Worker path isn't available or fails.
+function printExport(note) {
+  var suggestedFilename = buildFilename(note);
+  var originalTitle = document.title;
+  document.title = suggestedFilename;
+
+  function restoreTitle() {
+    document.title = originalTitle;
+    window.removeEventListener('afterprint', restoreTitle);
+  }
+  window.addEventListener('afterprint', restoreTitle);
+  window.print();
+  setTimeout(restoreTitle, 2000);
+}
+
+// One-click path via the Cloudflare Worker (headless Chromium). Returns
+// true on success, false on any failure so the caller can fall back.
+// Never throws.
+async function tryWorkerExport(note, templateId) {
+  try {
+    var workerUrl = window.CLOUDFLARE_WORKER_URL;
+    if (!workerUrl || workerUrl.indexOf('__') === 0) return false;
+    if (!note || !note.id) return false;
+
+    var shareResult = await enableSharing(note.id);
+    if (shareResult.error || !shareResult.data || !shareResult.data.share_token) {
+      return false;
+    }
+
+    var shareToken = shareResult.data.share_token;
+    var publicUrl = location.origin + '/pages/note.html?token=' + shareToken +
+      '&template=' + (templateId || 'classic');
+
+    var response = await fetch(workerUrl + '?url=' + encodeURIComponent(publicUrl));
+    if (!response.ok) return false;
+
+    var blob = await response.blob();
+    var filename = buildFilename(note) + '.pdf';
+
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(a.href);
+    return true;
+  } catch (e) {
+    console.warn('Worker PDF export failed, will fall back to print:', e);
+    return false;
+  }
+}
+
+async function requestPDFExport(note, templateId) {
+  var workerSucceeded = await tryWorkerExport(note, templateId);
+  if (!workerSucceeded) {
+    printExport(note);
+  }
 }
 
 export { requestPDFExport };

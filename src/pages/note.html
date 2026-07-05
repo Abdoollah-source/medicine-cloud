@@ -297,13 +297,13 @@
       var spinner = pdfBtn.querySelector('.btn-spinner');
       pdfBtn.disabled = true;
       pdfBtn.setAttribute('aria-busy', 'true');
-      if (textSpan) textSpan.textContent = 'Generating PDF...';
+      if (textSpan) textSpan.textContent = 'Preparing PDF...';
       if (spinner) spinner.style.display = 'inline-block';
       try {
         await requestPDFExport(noteData, getActiveTemplate());
       } catch (e) {
         console.error('PDF export failed:', e);
-        showError('Failed to generate PDF: ' + e.message);
+        showError('Failed to export PDF: ' + e.message);
       } finally {
         pdfBtn.disabled = false;
         pdfBtn.setAttribute('aria-busy', 'false');

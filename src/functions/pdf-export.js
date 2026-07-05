@@ -70,7 +70,7 @@ export default {
       });
     }
 
-    if (!env.MY_BROWSER) {
+    if (!env.BROWSER) {
       return new Response('Browser rendering binding not configured', {
         status: 500,
         headers: corsHeaders
@@ -79,7 +79,7 @@ export default {
 
     var browser;
     try {
-      browser = await puppeteer.launch(env.MY_BROWSER);
+      browser = await puppeteer.launch(env.BROWSER);
       var page = await browser.newPage();
       await page.goto(targetParam, {
         waitUntil: 'networkidle0',
