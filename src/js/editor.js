@@ -138,6 +138,24 @@ function processInput(textarea, statusBar) {
     return;
   }
 
+  if (Array.isArray(parsed)) {
+    if (parsed.length === 0) {
+      currentValidNote = null;
+      statusBar.className = 'error-state';
+      statusBar.textContent = 'Note must be a JSON object, not an empty array.';
+      updateSaveButtonState();
+      return;
+    }
+    if (parsed.length > 1) {
+      currentValidNote = null;
+      statusBar.className = 'error-state';
+      statusBar.textContent = 'Note must be a single JSON object, not an array of ' + parsed.length + ' items.';
+      updateSaveButtonState();
+      return;
+    }
+    parsed = parsed[0];
+  }
+
   const schemaError = validateSchema(parsed);
   if (schemaError) {
     currentValidNote = null;
